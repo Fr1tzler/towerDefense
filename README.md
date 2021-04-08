@@ -1,5 +1,12 @@
 # towerDefence
 
+## Участники
+
+- Виктор Фрицлер ([@Fr1tzler](https://github.com/Fr1tzler))
+- Дейнов Кирилл ([@Lexeria](https://github.com/Lexeria))
+- Аткишкин Владислав ([@AtkishkinVlad](https://github.com/AtkishkinVlad))
+- Рогачев Евгений ([@OksanaOriflame](https://github.com/OksanaOriflame))
+
 ## Краткое описание основных механик
 
 ### Клетки

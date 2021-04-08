@@ -20,13 +20,13 @@
 
 Цвет башни при слиянии, в свою очередь, зависит от цветов **исходных** башен:
 
-![addiction-formula](http://www.sciweavers.org/tex2img.php?eq=L_%7Bf%7D%3DL_%7B1%7D%2B%20%5Cfrac%7BL_%7B2%7D%7D%7BL_%7B1%7D%7D%20&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0)
+![addiction-formula](https://i.ibb.co/QCzw6hQ/tex2img.png)
 
 Где
 
--   ![Lf](http://www.sciweavers.org/tex2img.php?eq=L_%7Bf%7D&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0) — **итоговое** значение уровня.
--   ![L1](http://www.sciweavers.org/tex2img.php?eq=L_%7B1%7D&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0) — уровень башни с большим уровнем
--   ![L2](http://www.sciweavers.org/tex2img.php?eq=L_%7B2%7D&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0) — с меньшим
+-   ![Lf](https://i.ibb.co/TwzBXGk/tex2img-1.png) — **итоговое** значение уровня.
+-   ![L1](https://i.ibb.co/t44bvZf/tex2img-2.png) — уровень башни с большим уровнем
+-   ![L2](https://i.ibb.co/ccTNWyr/tex2img-3.png) — с меньшим
 
 При слиянии красной башни и желтой мы получим башню оранжевого цвета.
 

@@ -12,6 +12,7 @@
 
 body {
     margin: 0;
+    background-color: #222;
 }
 
 .gameMenuContainer {
@@ -25,37 +26,50 @@ body {
 }
 
 .gameMenu {
-    background-color: #555555;
-    border-radius: 5%;
+    background-color: #555;
+    border-radius: 10%;
 }
 
-.tileContainer {
+#tileContainer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.tileRow {
     background-color: transparent;
     position: relative;
+    height: 60px;
+    width: max-content;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .tile {
-    width: 30px;
-    height: 30px;
-    border-radius: 5%;
+    width: 54px;
+    height: 54px;
+    margin: 3px;
+    border-radius: 10%;
+    display: inline-block;
 }
 
 .emptyTile {
-    background-color: #555555;
+    background-color: #333;
 }
 
 .towerPlatformTile {
-    background-color: #777777;
+    background-color: #888;
 }
 
 .roadTile {
-    background-color: #666666;
+    background-color: #666;
 }
 
 .spawnTile {
-    background-color: #ff0000;
+    background-color: #f00;
 }
 
 .baseTile {
-    background-color: #00ff00;
+    background-color: #0f0;
 }

@@ -40,18 +40,19 @@ body {
 .tileRow {
     background-color: transparent;
     position: relative;
-    height: 60px;
     width: max-content;
     margin-left: auto;
     margin-right: auto;
 }
 
 .tile {
-    width: 54px;
-    height: 54px;
-    margin: 3px;
     border-radius: 10%;
     display: inline-block;
+    transition: all ease 0.3s;
+}
+
+.tile:hover {
+    box-shadow: 0 0 3px 2px white;
 }
 
 .emptyTile {

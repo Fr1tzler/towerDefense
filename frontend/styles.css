@@ -1,3 +1,61 @@
+@font-face {
+    font-family: 'Gardens CM';
+    src: url('fonts/CM_GARDEN_R.eot');
+    src: url('fonts/CM_GARDEN_R.eot?#iefix') format('embedded-opentype'),
+        url('fonts/CM_GARDEN_R.woff2') format('woff2'),
+        url('fonts/CM_GARDEN_R.woff') format('woff'),
+        url('fonts/CM_GARDEN_R.svg#CM_GARDEN_R') format('svg');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
 body {
     margin: 0;
+}
+
+.gameMenuContainer {
+    background-color: rgba(0, 0, 0, 0.5);
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.gameMenu {
+    background-color: #555555;
+    border-radius: 5%;
+}
+
+.tileContainer {
+    background-color: transparent;
+    position: relative;
+}
+
+.tile {
+    width: 30px;
+    height: 30px;
+    border-radius: 5%;
+}
+
+.emptyTile {
+    background-color: #555555;
+}
+
+.towerPlatformTile {
+    background-color: #777777;
+}
+
+.roadTile {
+    background-color: #666666;
+}
+
+.spawnTile {
+    background-color: #ff0000;
+}
+
+.baseTile {
+    background-color: #00ff00;
 }

@@ -165,46 +165,5 @@ function resizeMap() { // хорошо
     }
 }
 
-function getRandomInt(lowerBound, upperBound) { // вытащить в модуль с математикой
-    lowerBound = Math.ceil(lowerBound);
-    upperBound = Math.floor(upperBound);
-    return Math.floor(Math.random() * (upperBound - lowerBound)) + lowerBound;
-}
-
-function getNextLevel(levelOne, levelTwo) { // пока не используется
-    let maxLevel = Math.max(levelOne, levelTwo);
-    let minLevel = Math.min(levelOne, levelTwo);
-    return maxLevel + minLevel / maxLevel;
-}
-
-function getMergedColor(towerColorId, enemyColorId) { // пока не используется
-    let delta = towerColorId - enemyColorId;
-    if (Math.abs(delta) < 6) {
-        return towerColorId + Math.trunc(delta / 2);
-    }
-    return 0; // something hard
-}
-
-function getDamageMultiplier(towerColorId, enemyColorId) { // пока не используется
-    let delta = Math.abs(towerColorId - enemyColorId);
-    return delta < 6 ? 1 - 0.15 * delta : -0.8 + 0.15 * delta;
-}
-
-class Enemy { // пока не используется
-    constructor() {
-        this.colorId = getRandomInt(0, colors.length);
-        this.health = 100 + Math.log(killedEnemies);
-        this.block = document.createElement('div');
-        this.block.backgroundColor = colors[this.colorId];
-        this.speed = 10; // пусть будет 10, хз какая реальная величина в действительности
-        this.tilePosition = tempMap.enemyWaypoints[0];
-        this.windowPosition = transformTileToWindowCoords(this.tilePosition)
-    }
-}
-
-function transformTileToWindowCoords(tileCoords) { // пока не работает
-    return tileCoords;
-}
-
 document.addEventListener("DOMContentLoaded", init);
 window.addEventListener("resize", resizeMap);

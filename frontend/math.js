@@ -23,3 +23,8 @@ function getMergedColor(towerColorId, enemyColorId) {
     }
     return 0;
 }
+
+// TODO
+function transformTileToWindowCoords(tileCoords) {
+    return tileCoords;
+}

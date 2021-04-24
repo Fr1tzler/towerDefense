@@ -8,20 +8,6 @@ const gameStages = [ // пока не используется
     "gameEndScreen",
 ];
 let currentGameStage = gameStages[0]; // пока не используется
-const colors = [
-    "#FF3C00", // Можно здесь цвета проставить, но зачем?
-    "#F79A00",
-    "#F2C500",
-    "#F0FF00",
-    "#BAFF00",
-    "#4CBE2C",
-    "#2F77CF",
-    "#5700FF",
-    "#53009F",
-    "#9000AD",
-    "#A4003D",
-    "#FF0000",
-];
 // тут вообще мало что юзаем, буду делать пажылой рефактор
 let tileXCount = 0;
 let tileYCount = 0;

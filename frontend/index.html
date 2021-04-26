@@ -1,16 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- TODO: Add normal favicon -->
-    <link rel="shortcut icon" href="/images/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/images/favicon.ico" type="image/x-icon" />
     <script src="script.js"></script>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css" />
     <title>towerDefence</title>
 </head>
+
 <body>
-    <div id="tileContainer"></div>
+    <div class="screenContainer" id="aftergame">
+        <div class="screen" id="preGameScreen">
+            <h1>
+                COLOR DEFENSE
+            </h1>
+            <div class="usernameField"></div>
+            <div class="levelGallery">
+                <div class="levelPage">
+                    <div class="levelPreview"></div>
+                    <div class="levelPreview"></div>
+                    <div class="levelPreview"></div>
+                    <div class="levelPreview"></div>
+                </div>
+                <div class="levelSelectButton"></div>
+                <div class="levelSelectButton"></div>
+            </div>
+            <div class="newGameButton"></div>
+        </div>
+    </div>
+    <div class="screenContainer" id="aftergame">
+        <div class="screen" id="gameScreen">
+            <div id="tileContainer"></div>
+            <div class="towerInfoContainer"></div>
+            <div class="controlButtonBlock">
+                <div class="pauseButton"></div>
+                <div class="normalSpeedButton"></div>
+                <div class="increasedSpeedButton"></div>
+            </div>
+        </div>
+    </div>
+    <div class="screenContainer" id="aftergame">
+        <div class="screen" id="aftergameScreen">
+            <h1>
+                YOU LOST
+                <br>
+                game stats:
+            </h1>
+            <div class="leaderboards"></div>
+            <div class="menuTransitionButton"></div>
+            <div class="statsField"></div>
+        </div>
+    </div>
 </body>
+
 </html>

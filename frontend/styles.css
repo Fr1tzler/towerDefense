@@ -10,80 +10,36 @@
     font-display: swap;
 }
 
+h1 {
+    color: white;
+    position: relative;
+    top: 5%;
+    left: 5%;
+    font-size: 30px;
+}
+
 body {
     margin: 0;
     background-color: #222;
     font-family: 'Gardens CM';
 }
 
-.gameMenuContainer {
-    background-color: rgba(0, 0, 0, 0.5);
-    width: 100vw;
-    height: 100vh;
+.screenContainer {
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
 }
 
-.gameMenu {
+.screen {
+    /* TODO: be careful with width and height! */
+    width: 60vw;
+    height: 60vh;
+    position: absolute;
+    border-radius: 10px;
     background-color: #555;
-    border-radius: 10%;
-}
-
-#tileContainer {
-    position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-}
-
-.tileRow {
-    background-color: transparent;
-    position: relative;
-    width: max-content;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.tile {
-    border-radius: 5%;
-    display: inline-block;
-    transition: all ease 0.3s;
-}
-
-.tile:hover {
-    box-shadow: 0 0 3px 2px white;
-}
-
-.emptyTile {
-    background-color: #333;
-}
-
-.towerPlatformTile {
-    background-color: #888;
-}
-
-.roadTile {
-    background-color: #666;
-}
-
-.spawnTile {
-    background-color: #f00;
-}
-
-.baseTile {
-    background-color: #0f0;
-}
-
-.tower {
-    position: relative;
-    height: 60%;
-    width: 60%;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    border: 1px solid white;
-    border-radius: 50%;
-    transform-origin: 0% 0%;
 }

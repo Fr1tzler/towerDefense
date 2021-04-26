@@ -1,130 +1,35 @@
-const fps = 50;
-const mapMaximumSizeMultiplier = 0.8; // чисто для того, чтобы карта не занимала весь экран
-const gameStages = [ // пока не используется
-    "authorizationScreen",
-    "newGameScreen",
-    "levelSelectScreen",
-    "gameScreen",
-    "gameEndScreen",
+document.addEventListener('DOMContentLoaded', init);
+
+function init() {
+    console.log("ди своей дорогой, сталкер.");
+}
+
+
+const colors = [
+    "#FF3C00", // orangered
+    "#F79A00", // orange
+    "#F2C500", // orangeyellow
+    "#F0FF00", // yellow
+    "#BAFF00", // yellowgreen
+    "#4CBE2C", // green
+    "#2F77CF", // lightblue
+    "#5700FF", // blue
+    "#53009F", // violetblue
+    "#9000AD", // violet
+    "#A4003D", // cherry
+    "#FF0000", // red
 ];
-let currentGameStage = gameStages[0]; // пока не используется
-// тут вообще мало что юзаем, буду делать пажылой рефактор
-let tileXCount = 0;
-let tileYCount = 0;
-let towerList = [];
-let currentlyActiveTowers = [];
-let currentDeltaBetweenEnemies = 5000; // time in ms
-let killedEnemies = 0;
-let playerMoney = 0; 
-let timer;
-let enemies = [];
-let baseHP = 100;
 
-function init() { // хорошо, вроде бы
-    renderMap(tempMap.dimensionalArray);
-    mainloop();
+function countNextLevel(absorberTowerLevel, eatedTowerLevell) {
+    return absorberTowerLevel + eatedTowerLevell / absorberTowerLevel;
 }
 
-function mainloop() { // стартует, но ничего тут не происходит лул
-    enemies.push(new Enemy());
-    // DO SOMETHING
-    // timer = setTimeout(mainloop);
+// TODO:
+function countColorOnAbsorb(absorberColorId, eatedColorId) {
+    return 0;
 }
 
-function getTileSize(mapHeight, mapWidth) { // в принципе, покатит
-    let maxXSize = Math.floor(
-        (window.innerWidth * mapMaximumSizeMultiplier) / tileXCount
-    );
-    let maxYSize = Math.floor(
-        (window.innerHeight * mapMaximumSizeMultiplier) / tileYCount
-    );
-    return Math.min(maxXSize, maxYSize);
+// TODO:
+function countDamageMultiplier(towerColorId, enemyColorId) {
+    return 0;
 }
-
-function generateTower(tileXPosition, tileYPosition) { // переписать через класс
-    let tower = document.createElement("div");
-    tower.className = "tower";
-    let towerColorId = getRandomInt(0, colors.length);
-    tower.style.backgroundColor = colors[towerColorId];
-    let gun = document.createElement("div");
-    gun.className = "towerGun";
-    tower.appendChild(gun);
-    towerList.push({
-        X: tileXPosition,
-        Y: tileYPosition,
-        self: tower,
-        color: towerColorId,
-        level: 1,
-    });
-    return tower;
-}
-
-function renderMap(map) { // хорошо, скорее всего
-    tileYCount = map.length;
-    tileXCount = map[0].length;
-    for (let y = 0; y < map.length; y++) {
-        let tileRow = document.createElement("div");
-        tileRow.className = "tileRow";
-        for (let x = 0; x < map[y].length; x++) {
-            let tile = document.createElement("div");
-            tile.className = "tile";
-            switch (map[y][x]) {
-                case 0:
-                    tile.className += " emptyTile";
-                    break;
-                case 1:
-                    tile.className += " towerPlatformTile";
-                    tile.appendChild(generateTower(x, y));
-                    tile.onclick = function() {tileClickHandler(x, y, true)}
-                    break;
-                case 2:
-                    tile.className += " roadTile";
-                    break;
-                case 3:
-                    tile.className += " spawnTile";
-                    break;
-                case 4:
-                    tile.className += " baseTile";
-                    tile.onclick = function() {tileClickHandler(x, y, false)}
-                    break;
-                default:
-                    alert("WHAT HAVE YOU DONE STUPID MONKE!?");
-                    throw `Unexpected tile value at map`;
-            }
-            tile.id = `tile_${y}_${x}`;
-            tileRow.appendChild(tile);
-        }
-        document.getElementById("tileContainer").appendChild(tileRow);
-    }
-    resizeMap();
-}
-
-function tileClickHandler(x, y, isTower) { // бага с определением наличия элемента и с засвечиванием элементов, на которые нажал пользователь
-    if (isTower && currentlyActiveTowers.indexOf([x, y]) < 0) {
-        currentlyActiveTowers.push([x, y]);
-        document.getElementById(`tile_${y}_${x}`).style.boxShadow = "0 0 3px 2px white";
-        let removedTower;
-        if (currentlyActiveTowers.length > 2)
-            removedTower = currentlyActiveTowers.shift();
-        if (removedTower)
-            document.getElementById(`tile_${y}_${x}`).style.boxShadow = "";
-    }
-    console.log(`clicked on ${x} ${y}`)
-    console.log(currentlyActiveTowers);
-}
-
-function resizeMap() { // хорошо
-    let maxTileSize = getTileSize(tileYCount, tileXCount);
-    let rows = document.getElementsByClassName("tileRow");
-    for (let rowId = 0; rowId < tileYCount; rowId++)
-        rows[rowId].style.height = `${maxTileSize}px`;
-    let tiles = document.getElementsByClassName("tile");
-    for (let tileId = 0; tileId < tileYCount * tileXCount; tileId++) {
-        tiles[tileId].style.margin = `${Math.floor(maxTileSize * 0.05)}px`;
-        tiles[tileId].style.height = `${Math.floor(maxTileSize * 0.95)}px`;
-        tiles[tileId].style.width = `${Math.floor(maxTileSize * 0.95)}px`;
-    }
-}
-
-document.addEventListener("DOMContentLoaded", init);
-window.addEventListener("resize", resizeMap);

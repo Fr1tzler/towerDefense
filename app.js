@@ -3,8 +3,9 @@ const path = require('path');
 const bodyParser = require('body-parser');
 
 const app = express();
-const port = 3000;
+const port = 80;
 
+// FIXME: deprecated? I DUNNO LOL
 app.use(express.static(path.join(__dirname, 'frontend')));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());

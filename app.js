@@ -1,6 +1,7 @@
 const express = require("express");
 const path = require('path');
 const bodyParser = require('body-parser');
+const mysql = require('mysql2');
 
 const app = express();
 const port = 80;
@@ -14,19 +15,19 @@ app.get('/', (request, response) => {
     response.sendFile(`${__dirname}/frontend/index.html`);
 });
 
-app.get('/get_map', (request, response) => {
+// TODO: make request to database, extract maps with pageId == mapPage
+app.get('/get_maps', (request, response) => {
+    console.log('maps');
     let mapPage = request.query.mapPage;
-    // TODO: make request to database, extract maps with pageId == mapPage
     response.send({ 'do you want data' : 'i will not give it' });
 });
 
-
-app.post('/handle', (request, response) => {
+// TODO: Make one more request to database
+app.post('/send_game_stats', (request, response) => {
+    console.log('stats');
     let username = request.body.username;
     let score = request.body.score;
     let mapId = request.body.mapId;
-    let timePlayed = request.body.timePlayed;
-    // TODO: Make one more request to database
     response.send({
         '1' : 'Lupa',
         '2' : 'Lupa',

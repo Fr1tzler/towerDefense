@@ -1,9 +1,17 @@
+const serverLocation = "localhost";
+
+let mapPage = 0;
+let username = "Victor";
+let score = 0;
+let mapId = 0;
+
 document.addEventListener('DOMContentLoaded', init);
 
 function init() {
-    console.log("ди своей дорогой, сталкер.");
+    console.log("Иди своей дорогой, сталкер.");
+    document.getElementById('btn1').onclick = requestMapPage;
+    document.getElementById('btn2').onclick = requestGameStats;
 }
-
 
 const colors = [
     "#FF3C00", // orangered
@@ -32,4 +40,47 @@ function countColorOnAbsorb(absorberColorId, eatedColorId) {
 // TODO:
 function countDamageMultiplier(towerColorId, enemyColorId) {
     return 0;
+}
+
+// TODO: Добавить способ вытаскивать юзернейм при обновлении текстового поля (легчайше, но потом) 
+function saveUsernameInCookies() {
+    document.cookie=`username=${username}`;
+}
+
+function getUsernameInCookies() {
+    document.cookie.split(';').forEach(cooka => {
+        let match = cooka.match(/username=(.+)/);
+        if (match.length != 0)
+            return match[1]
+    })
+}
+
+function requestMapPage() {
+    fetch(`/get_maps?mapPage=${mapPage}`, {})
+    .then(response => {return response.json();})
+    .then(result => {drawMaps(result);})
+}
+
+function requestGameStats() {
+    let requestData = {
+        username: username,
+        score: score,
+        mapId: mapId
+    };
+    fetch('/send_game_stats', {
+        method: "POST",
+        body: JSON.stringify(requestData),
+    })
+    .then(response => {return response.json();})
+    .then(result => {updateLeaderbords(result);})
+}
+
+// TODO:
+function updateLeaderbords(leaders) {
+    console.log(leaders);
+}
+
+//TODO:
+function drawMaps(mapList) {
+    console.log(mapList);
 }

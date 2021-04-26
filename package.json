@@ -1,0 +1,24 @@
+{
+  "name": "towerDefence",
+  "version": "1.0.0",
+  "description": "## Участники",
+  "main": "app.js",
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Fr1tzler/towerDefence.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Fr1tzler/towerDefence/issues"
+  },
+  "homepage": "https://github.com/Fr1tzler/towerDefence#readme"
+}

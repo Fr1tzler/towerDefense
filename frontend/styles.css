@@ -21,7 +21,9 @@ body {
     height: 100%;
     top: 0;
     left: 0;
+    display: flex;
     position: absolute;
+    transition: all ease 200ms;
 }
 
 .screen {
@@ -38,7 +40,7 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     padding: 20px;
-    box-shadow: 0 0 100px 10px black;
+    box-shadow: 0 0 20px 10px black;
 }
 
 .gameScreenBar {
@@ -145,4 +147,81 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     table-layout: fixed;
+}
+
+.gamePanelContainer {
+    position: absolute;
+    display: inline-flex;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.tilePanel {
+    /* TODO: сделать по аналогии с .screen, но относительный размер примерно 9/10 */
+    flex-grow: 1;
+    width: 800px;
+    height: 800px;
+    position: relative;
+    border-radius: 30px;
+    background-color: #333;
+    flex-direction: column;
+    display: flex;
+    padding: 20px;
+    box-shadow: 0 0 20px 10px black;
+    margin: 20px;
+}
+
+.infoPanel {
+    /* TODO: сделать по аналогии с .screen, но относительный размер примерно 9/10 */
+    margin: 20px;
+    flex-grow: 1;
+    width: 400px;
+    height: 800px;
+    position: relative;
+    border-radius: 30px;
+    background-color: #333;
+    flex-direction: column;
+    display: flex;
+    padding: 20px;
+    box-shadow: 0 0 20px 10px black;    
+}
+
+.tileRow {
+    height: 80px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: row;
+}
+
+.tile {
+    flex-grow: 1;
+    margin: 3px;
+    border-radius: 5px;
+    background-color: #888;
+    transition: all ease 100ms;
+}
+
+.tile:hover {
+    box-shadow: 0 0 5px white;
+}
+
+.emptyTile {
+    /* TODO: */
+}
+
+.towerTile {
+    /* TODO: */
+}
+
+.roadTile {
+    /* TODO: */
+}
+
+.spawnTile {
+    /* TODO: */
+}
+
+.baseTile {
+    /* TODO: */
 }

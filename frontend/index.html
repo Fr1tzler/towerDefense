@@ -1,108 +1,123 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang='en'>
 
 <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset='UTF-8' />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <!-- TODO: Add normal favicon -->
-    <link rel="shortcut icon" href="/images/favicon.ico" type="image/x-icon" />
-    <script src="script.js"></script>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel='shortcut icon' href='/images/favicon.ico' type='image/x-icon' />
+    <script src='script.js'></script>
+    <link rel='stylesheet' href='styles.css' />
     <title>towerDefence</title>
 </head>
 
 <body>
-    <img src="images/newGameBackground.jpg" class="backgroundImage" alt="">
-    <div class="backgroundShadow"></div>
-    <div class="screenContainer" id="pregame" style="visibility: visible;">
-        <div class="screen" id="preGameScreen">
-            <div class="gameScreenBar">
-                <input type='text' class="usernameField" value="username">
-                <input type="button" class="usernameConfirmButton" value="Confirm">
+    <img src='images/pageBackground.jpg' class='backgroundImage' alt=''>
+    <div class='backgroundShadow'></div>
+    <div class='screenContainer' id='pregame' style='visibility: hidden;'>
+        <div class='screen' id='preGameScreen'>
+            <div class='gameScreenBar'>
+                <input type='text' class='usernameField' value='username'>
+                <input type='button' class='usernameConfirmButton' value='Confirm'>
             </div>
-            <div class="gameScreenMiddleBar">
-                <input type="button" class="levelSelectButton" value='prevPage'>
-                <div class="levelPage">
-                    <div class="levelPreviewRow">
-                        <div class="levelPreview" id="preview_1">1</div>
-                        <div class="levelPreview" id="preview_2">2</div>
-                        <div class="levelPreview" id="preview_3">3</div>    
+            <div class='gameScreenMiddleBar'>
+                <input type='button' class='levelSelectButton' value='prevPage'>
+                <div class='levelPage'>
+                    <div class='levelPreviewRow'>
+                        <div class='levelPreview' id='preview_1'>1</div>
+                        <div class='levelPreview' id='preview_2'>2</div>
+                        <div class='levelPreview' id='preview_3'>3</div>
                     </div>
-                    <div class="levelPreviewRow">
-                        <div class="levelPreview" id="preview_4">4</div>
-                        <div class="levelPreview" id="preview_5">5</div>
-                        <div class="levelPreview" id="preview_6">6</div>
+                    <div class='levelPreviewRow'>
+                        <div class='levelPreview' id='preview_4'>4</div>
+                        <div class='levelPreview' id='preview_5'>5</div>
+                        <div class='levelPreview' id='preview_6'>6</div>
                     </div>
-                    <div class="levelPreviewRow">
-                        <div class="levelPreview" id="preview_7">7</div>
-                        <div class="levelPreview" id="preview_8">8</div>
-                        <div class="levelPreview" id="preview_9">9</div>
+                    <div class='levelPreviewRow'>
+                        <div class='levelPreview' id='preview_7'>7</div>
+                        <div class='levelPreview' id='preview_8'>8</div>
+                        <div class='levelPreview' id='preview_9'>9</div>
                     </div>
                 </div>
-                <input type="button" class="levelSelectButton" value="nextPage">
+                <input type='button' class='levelSelectButton' value='nextPage'>
             </div>
-            <div class="gameScreenBar">
-                <input type="button" class="gameScreenBottomButton" id="startNewGame" value="new game">
-            </div>
-        </div>
-    </div>
-    <div class="screenContainer" id="game" style="visibility: hidden;">
-        <div class="screen" id="gameScreen">
-            <div id="tileContainer"></div>
-            <div class="towerInfoContainer"></div>
-            <div class="controlButtonBlock">
-                <div class="pauseButton"></div>
-                <div class="normalSpeedButton"></div>
-                <div class="increasedSpeedButton"></div>
+            <div class='gameScreenBar'>
+                <input type='button' class='gameScreenBottomButton' id='startNewGame' value='new game'>
             </div>
         </div>
     </div>
-    <div class="screenContainer" id="aftergame" style="visibility: visible;">
-        <div class="screen" id="aftergameScreen">
-            <div class="gameScreenBar">
-                <h1 class="screenTitle">YOU LOST</h1>
+    <div class='screenContainer' id='game' style='visibility: hidden;'>
+        <div class='gamePanelContainer'>
+            <div class='infoPanel'></div>
+            <div class='tilePanel' id='tileScreen'>
             </div>
-            <div class="gameScreenMiddleBar">
-                <table class="leadersTable" cellspacing="5">
-                    <th colspan="3">Leaderbords</th>
+        </div>
+    </div>
+    <div class='screenContainer' id='aftergame' style='visibility: hidden;'>
+        <div class='screen' id='aftergameScreen'>
+            <div class='gameScreenBar'>
+                <h1 class='screenTitle'>YOU LOST</h1>
+            </div>
+            <div class='gameScreenMiddleBar'>
+                <table class='leadersTable' cellspacing='5'>
+                    <th colspan='3'>Leaderbords</th>
                     <tr>
-                        <td>1</td><td id=leaderbordsRow_1>Lupa</td><td>500pts</td>
+                        <td>1</td>
+                        <td id=leaderbordsRow_1>Lupa</td>
+                        <td>500pts</td>
                     </tr>
                     <tr>
-                        <td>2</td><td id=leaderbordsRow_2>Lupa</td><td>500pts</td>
+                        <td>2</td>
+                        <td id=leaderbordsRow_2>Lupa</td>
+                        <td>500pts</td>
                     </tr>
                     <tr>
-                        <td>3</td><td id=leaderbordsRow_3>Lupa</td><td>500pts</td>
+                        <td>3</td>
+                        <td id=leaderbordsRow_3>Lupa</td>
+                        <td>500pts</td>
                     </tr>
                     <tr>
-                        <td>4</td><td id=leaderbordsRow_4>Lupa</td><td>500pts</td>
+                        <td>4</td>
+                        <td id=leaderbordsRow_4>Lupa</td>
+                        <td>500pts</td>
                     </tr>
                     <tr>
-                        <td>5</td><td id=leaderbordsRow_5>Lupa</td><td>500pts</td>
+                        <td>5</td>
+                        <td id=leaderbordsRow_5>Lupa</td>
+                        <td>500pts</td>
                     </tr>
                     <tr>
-                        <td>6</td><td id=leaderbordsRow_6>Lupa</td><td>500pts</td>
+                        <td>6</td>
+                        <td id=leaderbordsRow_6>Lupa</td>
+                        <td>500pts</td>
                     </tr>
                     <tr>
-                        <td>7</td><td id=leaderbordsRow_7>Lupa</td><td>500pts</td>
+                        <td>7</td>
+                        <td id=leaderbordsRow_7>Lupa</td>
+                        <td>500pts</td>
                     </tr>
                     <tr>
-                        <td>8</td><td id=leaderbordsRow_8>Lupa</td><td>500pts</td>
+                        <td>8</td>
+                        <td id=leaderbordsRow_8>Lupa</td>
+                        <td>500pts</td>
                     </tr>
                     <tr>
-                        <td>9</td><td id=leaderbordsRow_9>Lupa</td><td>500pts</td>
+                        <td>9</td>
+                        <td id=leaderbordsRow_9>Lupa</td>
+                        <td>500pts</td>
                     </tr>
                     <tr>
-                        <td>10</td><td id=leaderbordsRow_10>Pupa</td><td>-0pts</td>
+                        <td>10</td>
+                        <td id=leaderbordsRow_10>Pupa</td>
+                        <td>-0pts</td>
                     </tr>
                 </table>
             </div>
-            <div class="gameScreenBar">
-                <input type="button" class="gameScreenBottomButton" id="gotoNewGameScreen" value="play new game?">
+            <div class='gameScreenBar'>
+                <input type='button' class='gameScreenBottomButton' id='gotoNewGameScreen' value='play new game?'>
             </div>
         </div>
     </div>
 </body>
-
 </html>

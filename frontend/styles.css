@@ -25,15 +25,15 @@ body {
 }
 
 .screen {
+    /* TODO: сделать так, чтобы на экране любого размера оэтот блок был квадратом со стороной
+        в 3/5 доступного простравнства, если ориентация дисплея альбомная, и 4/5, если книжная */
     width: 600px;
     height: 600px;
-    position: absolute;
-
+    position: relative;
     border-radius: 30px;
     background-color: #333;
     flex-direction: column;
     display: flex;
-
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -41,17 +41,15 @@ body {
     box-shadow: 0 0 100px 10px black;
 }
 
-.newGameBar {
+.gameScreenBar {
     position: relative;
-
     height: 100px;
     display: flex;
     flex-grow: 1;
 }
 
-.levelGallery {
+.gameScreenMiddleBar {
     position: relative;
-
     height: 700px;
     flex-grow: 1;
     display: flex;
@@ -90,14 +88,16 @@ body {
 }
 
 .levelPreview:hover {
-    box-shadow: 0 0 3px white;
+    box-shadow: 0 0 5px white;
 }
 
-.newGameButton {
+.gameScreenBottomButton {
     flex-grow: 1;
-    background-color: greenyellow;
+    background-color: gray;
     margin: 5px;
     border-radius: 10px;
+    font-size: xx-large;
+    color: black;
 }
 
 .usernameField {
@@ -127,4 +127,22 @@ body {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
+}
+
+.screenTitle {
+    position: relative;
+    font-size: xx-large;
+    color: white;
+    margin: auto;
+}
+
+.leadersTable {
+    width: 80%;
+    position: relative;
+    color: white;
+    font-size: x-large;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    table-layout: fixed;
 }

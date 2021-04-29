@@ -13,26 +13,41 @@
 </head>
 
 <body>
-    <div class="screenContainer" id="aftergame">
+    <div class="screenContainer" id="pregame">
+        <img src="images/newGameBackground.jpg" class="backgroundImage" alt="">
+        <div class="backgroundShadow"></div>
         <div class="screen" id="preGameScreen">
-            <h1>
-                COLOR DEFENSE
-            </h1>
-            <div class="usernameField"></div>
-            <div class="levelGallery">
-                <div class="levelPage">
-                    <div class="levelPreview"></div>
-                    <div class="levelPreview"></div>
-                    <div class="levelPreview"></div>
-                    <div class="levelPreview"></div>
-                </div>
-                <div class="levelSelectButton"></div>
-                <div class="levelSelectButton"></div>
+            <div class="newGameBar">
+                <input type='text' class="usernameField" value="username">
+                <input type="button" class="usernameConfirmButton" value="Confirm">
             </div>
-            <div class="newGameButton"></div>
+            <div class="levelGallery">
+                <input type="button" class="levelSelectButton" value='prevPage'>
+                <div class="levelPage">
+                    <div class="levelPreviewRow">
+                        <div class="levelPreview">1</div>
+                        <div class="levelPreview">2</div>
+                        <div class="levelPreview">3</div>    
+                    </div>
+                    <div class="levelPreviewRow">
+                        <div class="levelPreview">4</div>
+                        <div class="levelPreview">5</div>
+                        <div class="levelPreview">6</div>
+                    </div>
+                    <div class="levelPreviewRow">
+                        <div class="levelPreview">7</div>
+                        <div class="levelPreview">8</div>
+                        <div class="levelPreview">9</div>
+                    </div>
+                </div>
+                <input type="button" class="levelSelectButton" value="nextPage">
+            </div>
+            <div class="newGameBar">
+                <input type="button" class="newGameButton" value="new game">
+            </div>
         </div>
     </div>
-    <div class="screenContainer" id="aftergame">
+    <div class="screenContainer" id="game" style="visibility: hidden;">
         <div class="screen" id="gameScreen">
             <div id="tileContainer"></div>
             <div class="towerInfoContainer"></div>
@@ -43,7 +58,7 @@
             </div>
         </div>
     </div>
-    <div class="screenContainer" id="aftergame">
+    <div class="screenContainer" id="aftergame" style="visibility: hidden;">
         <div class="screen" id="aftergameScreen">
             <h1>
                 YOU LOST

@@ -2,6 +2,7 @@ let mapPage = 0;
 let username = 'username';
 let score = 0;
 let mapId = 0;
+const tileLengthMultipier = 100;
 
 const gameStages = [
     'pregame',
@@ -51,6 +52,12 @@ const colors = [
     '#A4003D', // cherry
     '#FF0000', // red
 ];
+
+function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min)) + min; //Максимум не включается, минимум включается
+}
 
 function countNextLevel(absorberTowerLevel, eatedTowerLevell) {
     return absorberTowerLevel + eatedTowerLevell / absorberTowerLevel;
@@ -107,4 +114,41 @@ function updateLeaderbords(leaders) {
 //TODO:
 function drawMaps(mapList) {
     console.log(mapList);
+}
+
+class TowerModel {
+    constructor(mapX, mapY) {
+        this.position = {
+            realX : mapX * tileLengthMultipier,
+            realY = mapY * tileLengthMultipier
+        }
+        this.level = 1;
+        this.currentRotation = 0;
+        this.currentTarget = null;
+        this.color = getRandomInt(0, colors.length);
+    }
+}
+
+class EnemyModel {
+    constructor() {
+        this.position = {
+            realX: 0,
+            realY: 0
+        }
+        this.healthPoints = 100;
+        this.color = getRandomInt(0, colors.length);
+    }
+}
+
+// TODO:
+class GameModel {
+    constructor() {
+
+    }
+}
+
+class GameView {
+    constructor() {
+        
+    }
 }

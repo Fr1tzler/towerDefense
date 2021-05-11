@@ -26,7 +26,6 @@ function init() {
         }
     }
     //screenChangingLoop();
-    console.log(document.cookie);
     document.getElementById('usernameField').value = getCookie('username');
     document.getElementById('confirmUsername').addEventListener('click', saveUsernameInCookies);
 }
@@ -78,7 +77,6 @@ function countDamageMultiplier(towerColorId, enemyColorId) {
 function saveUsernameInCookies() {
     username = document.getElementById('usernameField').value;
     document.cookie=`username=${username}; SameSite=LAX`;
-    console.log(document.cookie);
 }
 
 function getCookie(cookieName) {    
@@ -140,19 +138,16 @@ class TowerModel {
 }
 
 class EnemyModel {
-    constructor() {
-        this.position = {
-            X: 0,
-            Y: 0
-        }
+    constructor(waypoints, color) {
         this.healthPoints = 100;
-        this.color = getRandomInt(0, colors.length);
+        this.color = color
         this.isAlive = true;
-        this.targetPosition = {
-            X: 1000,
-            Y: 1000
-        }
+        this.waypoints = waypoints;
+        this.position = waypoints[0];
+        this.targetPosition = waypoints[1];
+        this.nextWaypoint = 1;
         this.speed = 10;
+        this.reachedBase = false;
     }
 
     receiveDamage(incomingDamage) {
@@ -161,7 +156,8 @@ class EnemyModel {
             this.isAlive = false;
     }
 
-    moveToTarget(deltaTime) {
+    update(deltaTime) {
+        if (this.reachedBase) return;
         let deltaPosition = {
             X: this.targetPosition.X - this.position.X,
             Y: this.targetPosition.Y - this.position.Y,
@@ -170,15 +166,45 @@ class EnemyModel {
         let distanceRatio = Math.min(1, deltaTime * this.speed / deltaDistance);
         this.position.X += deltaPosition.X * distanceRatio;
         this.position.Y += deltaPosition.Y * distanceRatio;
+        if (distanceRatio == 1) {
+            this.nextWaypoint++;
+            if (this.nextWaypoint = this.waypoints.length)
+                this.reachedBase = true;
+            else
+                this.targetPosition = this.waypoints[this.nextWaypoint];
+        }
     }
 }
 
 // TODO:
 class GameModel {
-    constructor() {
+    constructor(map) {
+        this.waveIncoming = true;
+        this.wavesSurvived = 0;
+        this.baseHp = 100;
+        this.map = map;
+        this.mobList = [];
+        this.towerList = [];
     }
 
-    update(deptaTime) {
+    generateWave() {
+        let mobColor = getRandomInt(o, colors.length);
+        for (let i = 0; i < 3 + Math.trunc(this.wavesSurvived / 2); i++)
+            this.mobList.push(EnemyModel(this.map.waypoints, mobColor));
+    }
+
+    update(deltaTime) {
+        this.mobList.forEach(mob => mob.update(deltaTime));
+        this.towerList.forEach(tower => tower.update(deltaTime));
+        if (this.waveIncoming) {
+            this.generateWave();
+            this.waveIncoming = false;
+        }
+        if (this.mobList.length == 0) {
+            this.waveIncoming = true;
+            this.wavesSurvived++;
+        }
+
     }
 }
 

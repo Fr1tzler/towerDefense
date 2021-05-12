@@ -6,10 +6,9 @@ const mysql = require('mysql2');
 const app = express();
 const port = 80;
 
-// FIXME: deprecated? I DUNNO LOL
 app.use(express.static(path.join(__dirname, 'frontend')));
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: false}));
+app.use(express.json());
 
 app.get('/', (request, response) => {
     response.sendFile(`${__dirname}/frontend/index.html`);
@@ -17,14 +16,12 @@ app.get('/', (request, response) => {
 
 // TODO: make request to database, extract maps with pageId == mapPage
 app.get('/get_maps', (request, response) => {
-    console.log('maps');
     let mapPage = request.query.mapPage;
     response.send({ 'do you want data' : 'i will not give it' });
 });
 
 // TODO: Make one more request to database
 app.post('/send_game_stats', (request, response) => {
-    console.log('stats');
     let username = request.body.username;
     let score = request.body.score;
     let mapId = request.body.mapId;

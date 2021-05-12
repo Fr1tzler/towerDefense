@@ -129,7 +129,7 @@ function updateLeaderbords(leaders) {
     console.log(leaders);
 }
 
-//TODO:
+//TODO: отрисовка страницы с картами на стартовом экране
 function drawMaps(mapList) {
     console.log(mapList);
 }
@@ -228,24 +228,30 @@ class GameModel {
     update(deltaTime) {
         // апдейтим положение врагов и башен
         this.activeEnemyList.forEach(enemy => enemy.update(deltaTime));
-        // TODO: сделать так, чтобы башни стреляли по мобам
+        // TODO: сделать так, чтобы башни крутились в сторону первого из доступных мобов и при подходящем угле вели огонь
         this.towerList.forEach(tower => tower.update(deltaTime));
         
-        // обновляем activeEnemyList, убирая убитых или достигших базы
-        // TODO: оптимизировать (считать количество мобов, которе надо убрать, и если оно равно нулю, не выполнять этот шаг)
-        let newMobList = [];
-        for (let enemyId = 0; enemyId < this.activeEnemyList.length; enemyId++) {
-            let enemy = this.activeEnemyList[enemyId];
-            if (!enemy.isAlive) {
-                continue;
+        // обновляем activeEnemyList, убирая убитых или достигших базы, в случае, если такие есть
+        let enemyChangedStateCount = 0;
+        this.activeEnemyList.forEach(enemy => {
+            if (!enemy.isAlive || enemy.reachedBase) 
+                enemyChangedStateCount++;
+        });
+        if (enemyChangedStateCount != 0) {
+            let newMobList = [];
+            for (let enemyId = 0; enemyId < this.activeEnemyList.length; enemyId++) {
+                let enemy = this.activeEnemyList[enemyId];
+                if (!enemy.isAlive) {
+                    continue;
+                }
+                if (enemy.reachedBase) {
+                    this.baseHp--;
+                    continue;
+                }
+                newMobList.push(enemy);
             }
-            if (enemy.reachedBase) {
-                this.baseHp--;
-                continue;
-            }
-            newMobList.push(enemy);
+            this.activeEnemyList = newMobList;    
         }
-        this.activeEnemyList = newMobList;
 
         // апдейтим волну, если предыдущая закончена и прошло достаточно времени
         if (this.enemyQueue.length == 0 && (new Date() - this.lastGroupSpawnTime > groupSpawnInterval)) {
@@ -319,6 +325,9 @@ class GameView {
     }
 
     update(modelInfo) {
+        // TODO: enemy spawn(with resize) & movement(with rotation)
+        // TODO: tower rotation
+        // TODO: laser rays from toer to enemy
     }
 }
 

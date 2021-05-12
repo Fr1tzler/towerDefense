@@ -3,9 +3,11 @@ let username = 'username';
 let score = 0;
 let mapId = 0;
 const tileLengthMultipier = 100;
-
+const towerDistanceArea = 250;
+const fps = 50;
 const towerTile = 't';
-
+const mobSpawningInterval = 1000; // mob spawn interval in milliseconds
+const groupSpawnInterval = 10000; // milliseconds between last mob killed and new group spawn
 const gameStages = [
     'pregame',
     'game',
@@ -21,7 +23,7 @@ function init() {
     document.getElementById('confirmUsername').addEventListener('click', saveUsernameInCookies);
 
     let game = new Game(tempMap);
-    // mainloop(game);
+    mainloop(game);
 }
 
 function mainloop(game) {
@@ -44,7 +46,7 @@ const colors = [
     '#FF0000', // red
 ];
 
-const tierClipPath = {
+const towerTierClipPath = {
     1: 'polygon(50% 0%, 80% 80%, 20% 80%)',
     2: 'polygon(50% 0%, 80% 80%, 80% 90%, 20% 90%, 20% 80%)',
     3: 'polygon(50% 0%, 80% 80%, 70% 90%, 50% 80%, 30% 90%, 20% 80%)',
@@ -53,6 +55,17 @@ const tierClipPath = {
     6: 'polygon(50% 0%, 70% 50%, 80% 30%, 80% 90%, 70% 70%, 50% 90%, 30% 70%, 20% 90%, 20% 30%, 30% 50%)',
     7: 'polygon(50% 0%, 70% 50%, 70% 20%, 60% 10%, 80% 20%, 80% 60%, 50% 90%, 20% 60%, 20% 20%, 40% 10%, 30% 20%, 30% 50%)',
     8: 'polygon(50% 0%, 70% 50%, 70% 30%, 60% 10%, 90% 40%, 80% 80%, 70% 70%, 50% 100%, 30% 70%, 20% 80%, 10% 40%, 40% 10%, 30% 30%, 30% 50%)'
+}
+
+const enemyTierClipPath = {
+    1 : 'polygon(50% 0%, 80% 80%, 20% 80%)',
+    2 : 'polygon(50% 0%, 80% 80%, 50% 100%, 20% 80%)',
+    3 : 'polygon(50% 0%, 70% 60%, 90% 70%, 70% 80%, 50% 100%, 30% 80%, 10% 70%, 30% 60%)',
+    4 : 'polygon(50% 0%, 80% 60%, 100% 70%, 80% 80%, 80% 90%, 20% 90%, 20% 80%, 0% 70%, 20% 60%)',
+    5 : 'polygon(50% 0%, 80% 60%, 100% 60%, 100% 70%, 50% 100%, 0% 70%, 0% 60%, 20% 60%)',
+    6 : 'polygon(50% 0%, 70% 60%, 90% 50%, 90% 70%, 50% 100%, 10% 70%, 10% 50%, 30% 60%)',
+    7 : 'polygon(50% 0%, 70% 60%, 90% 50%, 70% 80%, 70% 90%, 30% 90%, 30% 80%, 10% 60%, 10% 50%, 30% 60%)',
+    8 : 'polygon(50% 0%, 70% 60%, 80% 50%, 80% 40%, 90% 30%, 90% 60%, 70% 80%, 70% 100%, 60% 90%, 40% 90%, 30% 100%, 30% 80%, 10% 60%, 10% 30%, 20% 40%, 20% 50%, 30% 60%)'
 }
 
 function getRandomInt(min, max) {
@@ -67,12 +80,12 @@ function countNextLevel(absorberTowerLevel, eatedTowerLevel) {
 
 // TODO:
 function countColorOnAbsorb(absorberColorId, eatedColorId) {
-    return 0;
+    return 1;
 }
 
 // TODO:
 function countDamageMultiplier(towerColorId, enemyColorId) {
-    return 0;
+    return 1;
 }
 
 function saveUsernameInCookies() {
@@ -149,11 +162,17 @@ class EnemyModel {
         this.healthPoints = 100;
         this.color = color
         this.isAlive = true;
-        this.waypoints = waypoints;
-        this.position = waypoints[0];
-        this.targetPosition = waypoints[1];
+        this.waypoints = [];
+        waypoints.forEach(waypoint => {
+            this.waypoints.push({
+                X: waypoint.X * tileLengthMultipier, 
+                Y: waypoint.Y * tileLengthMultipier
+            });
+        })
+        this.position = this.waypoints[0];
+        this.targetPosition = this.waypoints[1];
         this.nextWaypoint = 1;
-        this.speed = 10;
+        this.speed = 1 / 100;
         this.reachedBase = false;
     }
 
@@ -186,12 +205,14 @@ class EnemyModel {
 class GameModel {
     constructor(mapData) {
         this.waveIncoming = true;
-        this.wavesSurvived = 0;
+        this.currentWave = 0;
         this.baseHp = 100;
         this.mapData = mapData;
-        this.mobList = [];
+        this.enemyQueue = [];
+        this.activeEnemyList = [];
         this.towerList = [];
-        
+        this.lastMobSpawnTime = new Date();
+        this.lastGroupSpawnTime = new Date();
         for (let y = 0; y < 10; y++) 
             for (let x = 0; x < 10; x++) 
                 if (mapData.map[y][x] == towerTile) 
@@ -199,24 +220,45 @@ class GameModel {
     }
 
     generateWave() {
-        let mobColor = getRandomInt(0, colors.length);
-        for (let i = 0; i < 3 + Math.trunc(this.wavesSurvived / 2); i++)
-            this.mobList.push(new EnemyModel(this.mapData.waypoints, mobColor));
+        let enemyColor = getRandomInt(0, colors.length);
+        for (let i = 0; i < 3 + Math.trunc(this.currentWave / 2); i++)
+            this.enemyQueue.push(new EnemyModel(this.mapData.waypoints, enemyColor));
     }
 
     update(deltaTime) {
-        this.mobList.forEach(mob => mob.update(deltaTime));
+        // апдейтим положение врагов и башен
+        this.activeEnemyList.forEach(enemy => enemy.update(deltaTime));
+        // TODO: сделать так, чтобы башни стреляли по мобам
         this.towerList.forEach(tower => tower.update(deltaTime));
-        if (this.waveIncoming) {
-            this.generateWave();
-            this.waveIncoming = false;
+        
+        // обновляем activeEnemyList, убирая убитых или достигших базы
+        // TODO: оптимизировать (считать количество мобов, которе надо убрать, и если оно равно нулю, не выполнять этот шаг)
+        let newMobList = [];
+        for (let enemyId = 0; enemyId < this.activeEnemyList.length; enemyId++) {
+            let enemy = this.activeEnemyList[enemyId];
+            if (!enemy.isAlive) {
+                continue;
+            }
+            if (enemy.reachedBase) {
+                this.baseHp--;
+                continue;
+            }
+            newMobList.push(enemy);
         }
-        if (this.mobList.length == 0) {
-            this.waveIncoming = true;
-            this.wavesSurvived++;
+        this.activeEnemyList = newMobList;
+
+        // апдейтим волну, если предыдущая закончена и прошло достаточно времени
+        if (this.enemyQueue.length == 0 && (new Date() - this.lastGroupSpawnTime > groupSpawnInterval)) {
+            this.generateWave();
+            this.currentWave++;
+            this.lastGroupSpawnTime = new Date();
         }
 
-        console.log(this.mobList);
+        // если со спавна последнего моба прошло достаточно времени, и очередь не пуста, генерим нового моба на спавне
+        if (this.enemyQueue.length > 0 && (new Date - this.lastMobSpawnTime > mobSpawningInterval)) {
+            this.activeEnemyList.push(this.enemyQueue.shift());
+            this.lastMobSpawnTime = new Date();
+        }
     }
 }
 
@@ -226,8 +268,8 @@ class TowerView {
         this.inner = document.createElement('div');
         this.self.className = 'tower';
         this.inner.className = 'towerInner';
-        this.self.style.clipPath = tierClipPath[1];
-        this.inner.style.clipPath = tierClipPath[1];
+        this.self.style.clipPath = towerTierClipPath[1];
+        this.inner.style.clipPath = towerTierClipPath[1];
         this.inner.style.backgroundColor = colors[colorId];
         document.getElementById(`tile_${mapX}_${mapY}`).appendChild(this.self);
         this.self.appendChild(this.inner);
@@ -235,19 +277,25 @@ class TowerView {
 
     setTier(tier) {
         let truncatedTier = Math.trunc(tier);
-        this.self.style.clipPath = tierClipPath[truncatedTier];
-        this.inner.style.clipPath = tierClipPath[truncatedTier];
+        this.self.style.clipPath = towerTierClipPath[truncatedTier];
+        this.inner.style.clipPath = towerTierClipPath[truncatedTier];
     }
 }
 
 class EnemyView {
     constructor() {
-
+        this.self = document.createElement('div');
+        this.inner = document.createElement('div');
+        this.self.className = 'enemy';
+        this.inner.className = 'enemyInner';
+        // TODO: enemy generation
+        this.self.appendChild(this.inner);
     }
 }
 
 class GameView {
-    constructor(towerModelList) {
+    constructor(modelInfo) {
+        // tile generation
         let tileScreen = document.getElementById('tileScreen');
         for (let y = 0; y < 10; y++) {
             let row = document.createElement('div');
@@ -261,9 +309,11 @@ class GameView {
                 row.appendChild(tile);
             }
         }
+
+        // tower generation
         this.towerList = [];
-        for (let towerId = 0; towerId < towerModelList.length; towerId++) {
-            let tower = towerModelList[towerId];
+        for (let towerId = 0; towerId < modelInfo.towerList.length; towerId++) {
+            let tower = modelInfo.towerList[towerId];
             this.towerList.push(new TowerView(tower.position.X, tower.position.Y, tower.colorId))
         }
     }
@@ -275,7 +325,7 @@ class GameView {
 class Game {
     constructor(mapData) {
         this.model = new GameModel(mapData);
-        this.view = new GameView(this.model.towerList);
+        this.view = new GameView(this.model);
     }
 
     update(deltaTime) {

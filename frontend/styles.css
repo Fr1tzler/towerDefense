@@ -200,6 +200,9 @@ body {
     border-radius: 5px;
     background-color: #888;
     transition: all ease 100ms;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .tile:hover {
@@ -224,4 +227,21 @@ body {
 
 .baseTile {
     /* TODO: */
+}
+
+.tower {
+    background-color: black;
+    width: 80%;
+    height: 80%;
+    position: relative;
+    margin: auto;
+}
+
+.towerInner {
+    width: 90%;
+    height: 90%;
+    position: relative;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }

@@ -15,19 +15,26 @@ document.addEventListener('DOMContentLoaded', init);
 
 function init() {
     let tileScreen = document.getElementById('tileScreen');
-    for (let i = 0; i < 10; i++) {
+    for (let y = 0; y < 10; y++) {
         let row = document.createElement('div');
         row.className = 'tileRow';
         tileScreen.appendChild(row);
-        for (let j = 0; j < 10; j++) {
+        for (let x = 0; x < 10; x++) {
             let tile = document.createElement('div');
             tile.className = 'tile';
+            tile.id = `tile_${x}_${y}`;
             row.appendChild(tile);
         }
     }
     //screenChangingLoop();
+    // TODO: если такой куки нет, делать значение просто 'username'
     document.getElementById('usernameField').value = getCookie('username');
     document.getElementById('confirmUsername').addEventListener('click', saveUsernameInCookies);
+    let towers = [];
+    for (let i = 0; i < 8; i++) {
+        towers.push(new TowerView(i, i, i));
+        towers[towers.length - 1].setTier(i + 1);
+    }
 }
 
 function screenChangingLoop() {
@@ -53,6 +60,17 @@ const colors = [
     '#A4003D', // cherry
     '#FF0000', // red
 ];
+
+const tierClipPath = {
+    1 : 'polygon(50% 0%, 80% 80%, 20% 80%)',
+    2 : 'polygon(50% 0%, 80% 80%, 80% 90%, 20% 90%, 20% 80%)',
+    3 : 'polygon(50% 0%, 80% 80%, 70% 90%, 50% 80%, 30% 90%, 20% 80%)',
+    4 : 'polygon(50% 0%, 80% 70%, 60% 70%, 50% 90%, 40% 70%, 20% 70%)',
+    5 : 'polygon(50% 0%, 70% 50%, 80% 30%, 80% 60%, 50% 80%, 20% 60%, 20% 30%, 30% 50%)',
+    6 : 'polygon(50% 0%, 70% 50%, 80% 30%, 80% 90%, 70% 70%, 50% 90%, 30% 70%, 20% 90%, 20% 30%, 30% 50%)',
+    7 : 'polygon(50% 0%, 70% 50%, 70% 20%, 60% 10%, 80% 20%, 80% 60%, 50% 90%, 20% 60%, 20% 20%, 40% 10%, 30% 20%, 30% 50%)',
+    8 : 'polygon(50% 0%, 70% 50%, 70% 30%, 60% 10%, 90% 40%, 80% 80%, 70% 70%, 50% 100%, 30% 70%, 20% 80%, 10% 40%, 40% 10%, 30% 30%, 30% 50%)'
+}
 
 function getRandomInt(min, max) {
     min = Math.ceil(min);
@@ -205,6 +223,32 @@ class GameModel {
             this.wavesSurvived++;
         }
 
+    }
+}
+
+class TowerView {
+    constructor(mapX, mapY, colorId) {
+        this.self = document.createElement('div');
+        this.inner = document.createElement('div');
+        this.self.className = 'tower';
+        this.inner.className = 'towerInner';
+        this.self.style.clipPath = tierClipPath[1];
+        this.inner.style.clipPath = tierClipPath[1];
+        this.inner.style.backgroundColor = colors[colorId];
+        document.getElementById(`tile_${mapX}_${mapY}`).appendChild(this.self);
+        this.self.appendChild(this.inner);
+    }
+
+    setTier(tier) {
+        let truncatedTier = Math.trunc(tier);
+        this.self.style.clipPath = tierClipPath[truncatedTier];
+        this.inner.style.clipPath = tierClipPath[truncatedTier];
+    }
+}
+
+class EnemyView {
+    constructor() {
+        
     }
 }
 

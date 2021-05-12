@@ -4,6 +4,8 @@ let score = 0;
 let mapId = 0;
 const tileLengthMultipier = 100;
 
+const towerTile = 't';
+
 const gameStages = [
     'pregame',
     'game',
@@ -14,21 +16,17 @@ let currentGameStage = 0;
 document.addEventListener('DOMContentLoaded', init);
 
 function init() {
-    let gameModel = new GameModel(tempMap);
-    let gameView = new GameView();
-    //screenChangingLoop();
     // TODO: если такой куки нет, делать значение просто 'username'
     document.getElementById('usernameField').value = getCookie('username');
     document.getElementById('confirmUsername').addEventListener('click', saveUsernameInCookies);
+
+    let game = new Game(tempMap);
+    // mainloop(game);
 }
 
-function screenChangingLoop() {
-    document.getElementById(gameStages[currentGameStage]).style.opacity = "0";
-    document.getElementById(gameStages[currentGameStage]).style.visibility = "hidden";
-    currentGameStage = (currentGameStage + 1) % 3;
-    document.getElementById(gameStages[currentGameStage]).style.opacity = "1";
-    document.getElementById(gameStages[currentGameStage]).style.visibility = "visible";
-    setTimeout(screenChangingLoop, 10000);
+function mainloop(game) {
+    game.update(1000 / fps);
+    let timer = setTimeout(() => {mainloop(game)}, 1000 / fps);
 }
 
 const colors = [
@@ -134,11 +132,15 @@ class TowerModel {
         this.level = 1;
         this.currentRotation = 0;
         this.currentTarget = null;
-        this.color = getRandomInt(0, colors.length);
+        this.colorId = getRandomInt(0, colors.length);
     }
 
     getDamage() {
         return this.level * 100;
+    }
+
+    update(deltaTime) {
+
     }
 }
 
@@ -181,7 +183,6 @@ class EnemyModel {
     }
 }
 
-// TODO:
 class GameModel {
     constructor(mapData) {
         this.waveIncoming = true;
@@ -198,9 +199,9 @@ class GameModel {
     }
 
     generateWave() {
-        let mobColor = getRandomInt(o, colors.length);
+        let mobColor = getRandomInt(0, colors.length);
         for (let i = 0; i < 3 + Math.trunc(this.wavesSurvived / 2); i++)
-            this.mobList.push(EnemyModel(this.map.waypoints, mobColor));
+            this.mobList.push(new EnemyModel(this.mapData.waypoints, mobColor));
     }
 
     update(deltaTime) {
@@ -215,6 +216,7 @@ class GameModel {
             this.wavesSurvived++;
         }
 
+        console.log(this.mobList);
     }
 }
 
@@ -245,7 +247,7 @@ class EnemyView {
 }
 
 class GameView {
-    constructor() {
+    constructor(towerModelList) {
         let tileScreen = document.getElementById('tileScreen');
         for (let y = 0; y < 10; y++) {
             let row = document.createElement('div');
@@ -259,17 +261,28 @@ class GameView {
                 row.appendChild(tile);
             }
         }
+        this.towerList = [];
+        for (let towerId = 0; towerId < towerModelList.length; towerId++) {
+            let tower = towerModelList[towerId];
+            this.towerList.push(new TowerView(tower.position.X, tower.position.Y, tower.colorId))
+        }
     }
 
-    update(deltaTime) {
+    update(modelInfo) {
     }
 }
 
-const emptyTile = 'e';
-const roadTile = 'r';
-const towerTile = 't';
-const spawnTile = 's';
-const baseTile = 'b';
+class Game {
+    constructor(mapData) {
+        this.model = new GameModel(mapData);
+        this.view = new GameView(this.model.towerList);
+    }
+
+    update(deltaTime) {
+        this.model.update(deltaTime);
+        this.view.update(this.model);
+    }
+}
 
 const tileToClassDictionary = {
     'e': 'emptyTile',
@@ -292,7 +305,10 @@ const tempMap = {
         ['e', 'r', 't', 'e', 'e', 'e', 'e', 't', 'r', 'e'],
         ['e', 'b', 'e', 'e', 'e', 'e', 'e', 'e', 's', 'e']
     ],
-    waypoints: {
-
-    }
+    waypoints: [
+        {X : 8, Y: 9},
+        {X : 8, Y: 1},
+        {X : 1, Y: 1},
+        {X : 1, Y: 9},
+    ]
 }

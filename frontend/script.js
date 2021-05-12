@@ -14,27 +14,12 @@ let currentGameStage = 0;
 document.addEventListener('DOMContentLoaded', init);
 
 function init() {
-    let tileScreen = document.getElementById('tileScreen');
-    for (let y = 0; y < 10; y++) {
-        let row = document.createElement('div');
-        row.className = 'tileRow';
-        tileScreen.appendChild(row);
-        for (let x = 0; x < 10; x++) {
-            let tile = document.createElement('div');
-            tile.className = 'tile';
-            tile.id = `tile_${x}_${y}`;
-            row.appendChild(tile);
-        }
-    }
+    let gameModel = new GameModel(tempMap);
+    let gameView = new GameView();
     //screenChangingLoop();
     // TODO: если такой куки нет, делать значение просто 'username'
     document.getElementById('usernameField').value = getCookie('username');
     document.getElementById('confirmUsername').addEventListener('click', saveUsernameInCookies);
-    let towers = [];
-    for (let i = 0; i < 8; i++) {
-        towers.push(new TowerView(i, i, i));
-        towers[towers.length - 1].setTier(i + 1);
-    }
 }
 
 function screenChangingLoop() {
@@ -62,14 +47,14 @@ const colors = [
 ];
 
 const tierClipPath = {
-    1 : 'polygon(50% 0%, 80% 80%, 20% 80%)',
-    2 : 'polygon(50% 0%, 80% 80%, 80% 90%, 20% 90%, 20% 80%)',
-    3 : 'polygon(50% 0%, 80% 80%, 70% 90%, 50% 80%, 30% 90%, 20% 80%)',
-    4 : 'polygon(50% 0%, 80% 70%, 60% 70%, 50% 90%, 40% 70%, 20% 70%)',
-    5 : 'polygon(50% 0%, 70% 50%, 80% 30%, 80% 60%, 50% 80%, 20% 60%, 20% 30%, 30% 50%)',
-    6 : 'polygon(50% 0%, 70% 50%, 80% 30%, 80% 90%, 70% 70%, 50% 90%, 30% 70%, 20% 90%, 20% 30%, 30% 50%)',
-    7 : 'polygon(50% 0%, 70% 50%, 70% 20%, 60% 10%, 80% 20%, 80% 60%, 50% 90%, 20% 60%, 20% 20%, 40% 10%, 30% 20%, 30% 50%)',
-    8 : 'polygon(50% 0%, 70% 50%, 70% 30%, 60% 10%, 90% 40%, 80% 80%, 70% 70%, 50% 100%, 30% 70%, 20% 80%, 10% 40%, 40% 10%, 30% 30%, 30% 50%)'
+    1: 'polygon(50% 0%, 80% 80%, 20% 80%)',
+    2: 'polygon(50% 0%, 80% 80%, 80% 90%, 20% 90%, 20% 80%)',
+    3: 'polygon(50% 0%, 80% 80%, 70% 90%, 50% 80%, 30% 90%, 20% 80%)',
+    4: 'polygon(50% 0%, 80% 70%, 60% 70%, 50% 90%, 40% 70%, 20% 70%)',
+    5: 'polygon(50% 0%, 70% 50%, 80% 30%, 80% 60%, 50% 80%, 20% 60%, 20% 30%, 30% 50%)',
+    6: 'polygon(50% 0%, 70% 50%, 80% 30%, 80% 90%, 70% 70%, 50% 90%, 30% 70%, 20% 90%, 20% 30%, 30% 50%)',
+    7: 'polygon(50% 0%, 70% 50%, 70% 20%, 60% 10%, 80% 20%, 80% 60%, 50% 90%, 20% 60%, 20% 20%, 40% 10%, 30% 20%, 30% 50%)',
+    8: 'polygon(50% 0%, 70% 50%, 70% 30%, 60% 10%, 90% 40%, 80% 80%, 70% 70%, 50% 100%, 30% 70%, 20% 80%, 10% 40%, 40% 10%, 30% 30%, 30% 50%)'
 }
 
 function getRandomInt(min, max) {
@@ -94,24 +79,24 @@ function countDamageMultiplier(towerColorId, enemyColorId) {
 
 function saveUsernameInCookies() {
     username = document.getElementById('usernameField').value;
-    document.cookie=`username=${username}; SameSite=LAX`;
+    document.cookie = `username=${username}; SameSite=LAX`;
 }
 
-function getCookie(cookieName) {    
-    cookieName += "=";    
-    let cookieArray = document.cookie.split(';');    
-    for (let cookieId = 0; cookieId < cookieArray.length; cookieId++) {        
-        var cookie = cookieArray[cookieId];        
-        while (cookie.charAt(0)==' ') cookie = cookie.substring(1,cookie.length);        
-        if (cookie.indexOf(cookieName) == 0) return cookie.substring(cookieName.length, cookie.length);    
-    }    
+function getCookie(cookieName) {
+    cookieName += "=";
+    let cookieArray = document.cookie.split(';');
+    for (let cookieId = 0; cookieId < cookieArray.length; cookieId++) {
+        var cookie = cookieArray[cookieId];
+        while (cookie.charAt(0) == ' ') cookie = cookie.substring(1, cookie.length);
+        if (cookie.indexOf(cookieName) == 0) return cookie.substring(cookieName.length, cookie.length);
+    }
     return null;
 }
 
 function requestMapPage() {
     fetch(`/get_maps?mapPage=${mapPage}`, {})
-    .then(response => {return response.json();})
-    .then(result => {drawMaps(result);})
+        .then(response => { return response.json(); })
+        .then(result => { drawMaps(result); })
 }
 
 function requestGameStats() {
@@ -124,8 +109,8 @@ function requestGameStats() {
         method: 'POST',
         body: JSON.stringify(requestData),
     })
-    .then(response => {return response.json();})
-    .then(result => {updateLeaderbords(result);})
+        .then(response => { return response.json(); })
+        .then(result => { updateLeaderbords(result); })
 }
 
 // TODO:
@@ -141,8 +126,10 @@ function drawMaps(mapList) {
 class TowerModel {
     constructor(mapX, mapY) {
         this.position = {
-            X : mapX * tileLengthMultipier,
-            Y : mapY * tileLengthMultipier
+            X: mapX,
+            Y: mapY,
+            realX: mapX * tileLengthMultipier,
+            realY: mapY * tileLengthMultipier
         }
         this.level = 1;
         this.currentRotation = 0;
@@ -170,7 +157,7 @@ class EnemyModel {
 
     receiveDamage(incomingDamage) {
         this.healthPoints = Math.max(0, this.healthPoints - incomingDamage);
-        if (this.healthPoints == 0) 
+        if (this.healthPoints == 0)
             this.isAlive = false;
     }
 
@@ -196,13 +183,18 @@ class EnemyModel {
 
 // TODO:
 class GameModel {
-    constructor(map) {
+    constructor(mapData) {
         this.waveIncoming = true;
         this.wavesSurvived = 0;
         this.baseHp = 100;
-        this.map = map;
+        this.mapData = mapData;
         this.mobList = [];
         this.towerList = [];
+        
+        for (let y = 0; y < 10; y++) 
+            for (let x = 0; x < 10; x++) 
+                if (mapData.map[y][x] == towerTile) 
+                    this.towerList.push(new TowerModel(x, y));
     }
 
     generateWave() {
@@ -248,14 +240,59 @@ class TowerView {
 
 class EnemyView {
     constructor() {
-        
+
     }
 }
 
 class GameView {
     constructor() {
+        let tileScreen = document.getElementById('tileScreen');
+        for (let y = 0; y < 10; y++) {
+            let row = document.createElement('div');
+            row.className = 'tileRow';
+            tileScreen.appendChild(row);
+            for (let x = 0; x < 10; x++) {
+                let tile = document.createElement('div');
+                tile.className = 'tile ';
+                tile.className += tileToClassDictionary[tempMap.map[y][x]];
+                tile.id = `tile_${x}_${y}`;
+                row.appendChild(tile);
+            }
+        }
     }
 
     update(deltaTime) {
+    }
+}
+
+const emptyTile = 'e';
+const roadTile = 'r';
+const towerTile = 't';
+const spawnTile = 's';
+const baseTile = 'b';
+
+const tileToClassDictionary = {
+    'e': 'emptyTile',
+    'r': 'roadTile',
+    't': 'towerTile',
+    's': 'spawnTile',
+    'b': 'baseTile'
+}
+
+const tempMap = {
+    map: [
+        ['e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e'],
+        ['e', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'e'],
+        ['e', 'r', 't', 't', 't', 't', 't', 't', 'r', 'e'],
+        ['e', 'r', 't', 'e', 'e', 'e', 'e', 't', 'r', 'e'],
+        ['e', 'r', 't', 'e', 'e', 'e', 'e', 't', 'r', 'e'],
+        ['e', 'r', 't', 'e', 'e', 'e', 'e', 't', 'r', 'e'],
+        ['e', 'r', 't', 'e', 'e', 'e', 'e', 't', 'r', 'e'],
+        ['e', 'r', 't', 'e', 'e', 'e', 'e', 't', 'r', 'e'],
+        ['e', 'r', 't', 'e', 'e', 'e', 'e', 't', 'r', 'e'],
+        ['e', 'b', 'e', 'e', 'e', 'e', 'e', 'e', 's', 'e']
+    ],
+    waypoints: {
+
     }
 }

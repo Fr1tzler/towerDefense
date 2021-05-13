@@ -23,12 +23,11 @@ function init() {
     document.getElementById('confirmUsername').addEventListener('click', saveUsernameInCookies);
 
     let game = new Game(tempMap);
-    mainloop(game);
+    let timer = setInterval(mainloop, 1000/fps, game)
 }
 
 function mainloop(game) {
     game.update(1000 / fps);
-    let timer = setTimeout(() => {mainloop(game)}, 1000 / fps);
 }
 
 const colors = [
@@ -165,8 +164,8 @@ class EnemyModel {
         this.waypoints = [];
         waypoints.forEach(waypoint => {
             this.waypoints.push({
-                X: waypoint.X * tileLengthMultipier, 
-                Y: waypoint.Y * tileLengthMultipier
+                X: waypoint.X * tileLengthMultipier + Math.trunc(tileLengthMultipier / 2), 
+                Y: waypoint.Y * tileLengthMultipier + Math.trunc(tileLengthMultipier / 2)
             });
         })
         this.position = this.waypoints[0];
@@ -188,6 +187,8 @@ class EnemyModel {
             X: this.targetPosition.X - this.position.X,
             Y: this.targetPosition.Y - this.position.Y,
         }
+        // TODO: упрость движение, поскольку оно происходит только по вертикали горизонтали, сложная функция не нужна
+        // TODO: добавть поворот согласно направлению движения
         let deltaDistance = Math.hypot(deltaPosition.X, deltaPosition.Y);
         let distanceRatio = Math.min(1, deltaTime * this.speed / deltaDistance);
         this.position.X += deltaPosition.X * distanceRatio;
@@ -289,13 +290,41 @@ class TowerView {
 }
 
 class EnemyView {
-    constructor() {
+    constructor(position, colorId) {
         this.self = document.createElement('div');
         this.inner = document.createElement('div');
         this.self.className = 'enemy';
         this.inner.className = 'enemyInner';
-        // TODO: enemy generation
+
+        this.self.style.clipPath = enemyTierClipPath[8];
+        this.inner.style.clipPath = enemyTierClipPath[8];
+        this.inner.style.backgroundColor = colors[colorId];
+
+        let tileScreen = document.getElementById('tileScreen');
+        
+        // FIXME: чет очень страшно выглядит, посмотреть позже.
+        let paddingSize = window.getComputedStyle(tileScreen).paddingLeft;
+        console.log(paddingSize + '');
+        let tileScreenSize = {X: tileScreen.offsetWidth - 2 * paddingSize, Y: tileScreen.offsetHeight - 2 * paddingSize}; 
+        document.getElementById('tileScreen').appendChild(this.self);
         this.self.appendChild(this.inner);
+
+        let realPosition = this.transformPosition(position, tileScreenSize, paddingSize);
+        alert(realPosition.X);
+        this.self.style.left = `${Math.trunc(realPosition.X)}px`;
+        this.self.style.top = `${Math.trunc(realPosition.Y)}px`;
+    }
+
+    update() {
+        // TODO:
+    }
+
+    // TODO:
+    transformPosition(modelPosition, mapSize, padding) {
+        return {
+            X: modelPosition.X * mapSize.X / 1000 + padding,
+            Y: modelPosition.Y * mapSize.Y / 1000 + padding
+        };
     }
 }
 
@@ -322,6 +351,8 @@ class GameView {
             let tower = modelInfo.towerList[towerId];
             this.towerList.push(new TowerView(tower.position.X, tower.position.Y, tower.colorId))
         }
+
+        let a = new EnemyView({X: 850, Y: 950}, 3);
     }
 
     update(modelInfo) {

@@ -7,7 +7,7 @@ const towerDistanceArea = 250;
 const fps = 10;
 const towerTile = 't';
 const mobSpawningInterval = 600; // mob spawn interval in milliseconds
-const groupSpawnInterval = 10000; // milliseconds between last mob killed and new group spawn
+const groupSpawnInterval = 5000; // milliseconds between last mob killed and new group spawn
 const gameStages = [
     'pregame',
     'game',
@@ -395,6 +395,12 @@ class GameView {
             this.enemyList.delete(currentEnemy);
         }
         modelInfo.recentlyDeletedEnemy = [];
+        this.updateProgressBar(modelInfo.baseHp);
+    }
+
+    updateProgressBar(baseHp) {
+        document.getElementById('progressBarText').innerText = `${baseHp}/100`
+        document.getElementById('progressBarLine').style.right = `${100-baseHp}%`;
     }
 }
 

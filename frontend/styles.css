@@ -263,3 +263,40 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
 }
+
+/* PROGRESS BAR START */
+
+.progressBarContainer {
+    background-color: #666;
+    padding: 10px;
+    border-radius: 10px;
+    width: min-content;
+    display: flex;
+    flex-direction: column;
+}
+
+.progressBarText {
+    font-size: xx-large;
+    position: relative;
+    float: right;
+    color: white;
+}
+
+.progressBar {
+    position: relative;
+    width: 200px;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progressBarLine {
+    position: relative;
+    width: 200px;
+    height: 8px;
+    border-radius: 4px;
+    background-color: white;
+    transition: 0.5s all ease;
+}
+
+/* PROGRESS BAR END */

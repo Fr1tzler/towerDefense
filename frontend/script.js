@@ -4,10 +4,10 @@ let score = 0;
 let mapId = 0;
 const tileLengthMultipier = 100;
 const towerDistanceArea = 250;
-const fps = 50;
+const fps = 10;
 const towerTile = 't';
 const mobSpawningInterval = 1000; // mob spawn interval in milliseconds
-const groupSpawnInterval = 10000; // milliseconds between last mob killed and new group spawn
+const groupSpawnInterval = 1000; // milliseconds between last mob killed and new group spawn
 const gameStages = [
     'pregame',
     'game',
@@ -23,7 +23,7 @@ function init() {
     document.getElementById('confirmUsername').addEventListener('click', saveUsernameInCookies);
 
     let game = new Game(tempMap);
-    let timer = setInterval(mainloop, 1000/fps, game)
+    let timer = setInterval(mainloop, 1000 / fps, game)
 }
 
 function mainloop(game) {
@@ -159,7 +159,7 @@ class TowerModel {
 class EnemyModel {
     constructor(waypoints, color) {
         this.healthPoints = 100;
-        this.color = color
+        this.color = color;
         this.isAlive = true;
         this.waypoints = [];
         waypoints.forEach(waypoint => {
@@ -171,8 +171,9 @@ class EnemyModel {
         this.position = this.waypoints[0];
         this.targetPosition = this.waypoints[1];
         this.nextWaypoint = 1;
-        this.speed = 1 / 100;
+        this.speed = 1 / 10;
         this.reachedBase = false;
+        this.rotation = 0; // TODO: use later
     }
 
     receiveDamage(incomingDamage) {
@@ -187,18 +188,26 @@ class EnemyModel {
             X: this.targetPosition.X - this.position.X,
             Y: this.targetPosition.Y - this.position.Y,
         }
-        // TODO: упрость движение, поскольку оно происходит только по вертикали горизонтали, сложная функция не нужна
-        // TODO: добавть поворот согласно направлению движения
-        let deltaDistance = Math.hypot(deltaPosition.X, deltaPosition.Y);
-        let distanceRatio = Math.min(1, deltaTime * this.speed / deltaDistance);
-        this.position.X += deltaPosition.X * distanceRatio;
-        this.position.Y += deltaPosition.Y * distanceRatio;
-        if (distanceRatio == 1) {
-            this.nextWaypoint++;
-            if (this.nextWaypoint = this.waypoints.length)
-                this.reachedBase = true;
+
+        if (deltaPosition.Y == 0) {
+            if (deltaPosition.X > 0)
+                this.position.X = Math.min(this.position.X + deltaTime * this.speed, this.targetPosition.X);
             else
+                this.position.X = Math.max(this.position.X - deltaTime * this.speed, this.targetPosition.X);
+        } else {
+            if (deltaPosition.Y > 0)
+                this.position.Y = Math.min(this.position.Y + deltaTime * this.speed, this.targetPosition.Y);
+            else
+                this.position.Y = Math.max(this.position.Y - deltaTime * this.speed, this.targetPosition.Y);
+        }
+
+        if (this.position.X == this.targetPosition.X && this.position.Y == this.targetPosition.Y) {
+            this.nextWaypoint++;
+            if (this.nextWaypoint == this.waypoints.length) {
+                this.reachedBase = true;
+            } else {
                 this.targetPosition = this.waypoints[this.nextWaypoint];
+            }
         }
     }
 }
@@ -290,7 +299,7 @@ class TowerView {
 }
 
 class EnemyView {
-    constructor(position, colorId) {
+    constructor(enemyModel) {
         this.self = document.createElement('div');
         this.inner = document.createElement('div');
         this.self.className = 'enemy';
@@ -298,28 +307,30 @@ class EnemyView {
 
         this.self.style.clipPath = enemyTierClipPath[8];
         this.inner.style.clipPath = enemyTierClipPath[8];
-        this.inner.style.backgroundColor = colors[colorId];
+        this.inner.style.backgroundColor = colors[1]; // FIXME:
 
         let tileScreen = document.getElementById('tileScreen');
         
-        // FIXME: чет очень страшно выглядит, посмотреть позже.
-        let paddingSize = window.getComputedStyle(tileScreen).paddingLeft;
-        console.log(paddingSize + '');
-        let tileScreenSize = {X: tileScreen.offsetWidth - 2 * paddingSize, Y: tileScreen.offsetHeight - 2 * paddingSize}; 
-        document.getElementById('tileScreen').appendChild(this.self);
+        let rawPaddingSize = window.getComputedStyle(tileScreen).getPropertyValue("padding-left");
+        this.paddingSize = parseInt(rawPaddingSize.replace('px'));
+        
+        // FIXME:
+        this.mapSize = {X: 800, Y: 800};
+
+        let truePosition = this.transformPosition(enemyModel.position, this.mapSize, this.paddingSize);
+        tileScreen.appendChild(this.self);
         this.self.appendChild(this.inner);
-
-        let realPosition = this.transformPosition(position, tileScreenSize, paddingSize);
-        alert(realPosition.X);
-        this.self.style.left = `${Math.trunc(realPosition.X)}px`;
-        this.self.style.top = `${Math.trunc(realPosition.Y)}px`;
+        this.self.style.left = `${truePosition.X}px`;
+        this.self.style.top = `${truePosition.Y}px`;
     }
 
-    update() {
+    update(enemyModel) {
         // TODO:
+        let truePosition = this.transformPosition(enemyModel.position, this.mapSize, this.paddingSize);
+        this.self.style.left = `${truePosition.X}px`;
+        this.self.style.top = `${truePosition.Y}px`;
     }
 
-    // TODO:
     transformPosition(modelPosition, mapSize, padding) {
         return {
             X: modelPosition.X * mapSize.X / 1000 + padding,
@@ -351,14 +362,22 @@ class GameView {
             let tower = modelInfo.towerList[towerId];
             this.towerList.push(new TowerView(tower.position.X, tower.position.Y, tower.colorId))
         }
-
-        let a = new EnemyView({X: 850, Y: 950}, 3);
+        this.aboba = 0;
+        this.enemyList = [];
     }
 
     update(modelInfo) {
-        // TODO: enemy spawn(with resize) & movement(with rotation)
-        // TODO: tower rotation
-        // TODO: laser rays from toer to enemy
+        if (modelInfo.activeEnemyList.length != 0) {
+            if (this.enemyList.length == 0) {
+                this.enemyList.push(new EnemyView(modelInfo.activeEnemyList[0]));
+            } else {
+                this.enemyList[0].update(modelInfo.activeEnemyList[0]);
+            }
+        }
+        /*
+        for (let enemyId = 0; enemyId <  modelInfo.activeEnemyList.length; enemyId++) {
+
+        }*/
     }
 }
 

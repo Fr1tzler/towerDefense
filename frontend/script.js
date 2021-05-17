@@ -1,9 +1,12 @@
+import {towerTierClipPath, enemyTierClipPath} from './geometry.js';
+import {getRandomInt, countNextLevel, countColorOnAbsorb, countDamageMultiplier} from './mathModule.js';
+
 let mapPage = 0;
 let username = 'username';
 let score = 0;
 let mapId = 0;
 const tileLengthMultipier = 100;
-const towerDistanceArea = 250;
+const towerDistanceArea = 2500000;
 const fps = 10;
 const towerTile = 't';
 const mobSpawningInterval = 600; // mob spawn interval in milliseconds
@@ -14,6 +17,7 @@ const gameStages = [
     'aftergame'
 ]
 let currentGameStage = 0;
+
 
 document.addEventListener('DOMContentLoaded', init);
 
@@ -44,48 +48,6 @@ const colors = [
     '#A4003D', // cherry
     '#FF0000', // red
 ];
-
-const towerTierClipPath = {
-    1: 'polygon(50% 0%, 80% 80%, 20% 80%)',
-    2: 'polygon(50% 0%, 80% 80%, 80% 90%, 20% 90%, 20% 80%)',
-    3: 'polygon(50% 0%, 80% 80%, 70% 90%, 50% 80%, 30% 90%, 20% 80%)',
-    4: 'polygon(50% 0%, 80% 70%, 60% 70%, 50% 90%, 40% 70%, 20% 70%)',
-    5: 'polygon(50% 0%, 70% 50%, 80% 30%, 80% 60%, 50% 80%, 20% 60%, 20% 30%, 30% 50%)',
-    6: 'polygon(50% 0%, 70% 50%, 80% 30%, 80% 90%, 70% 70%, 50% 90%, 30% 70%, 20% 90%, 20% 30%, 30% 50%)',
-    7: 'polygon(50% 0%, 70% 50%, 70% 20%, 60% 10%, 80% 20%, 80% 60%, 50% 90%, 20% 60%, 20% 20%, 40% 10%, 30% 20%, 30% 50%)',
-    8: 'polygon(50% 0%, 70% 50%, 70% 30%, 60% 10%, 90% 40%, 80% 80%, 70% 70%, 50% 100%, 30% 70%, 20% 80%, 10% 40%, 40% 10%, 30% 30%, 30% 50%)'
-}
-
-const enemyTierClipPath = {
-    1: 'polygon(50% 0%, 80% 80%, 20% 80%)',
-    2: 'polygon(50% 0%, 80% 80%, 50% 100%, 20% 80%)',
-    3: 'polygon(50% 0%, 70% 60%, 90% 70%, 70% 80%, 50% 100%, 30% 80%, 10% 70%, 30% 60%)',
-    4: 'polygon(50% 0%, 80% 60%, 100% 70%, 80% 80%, 80% 90%, 20% 90%, 20% 80%, 0% 70%, 20% 60%)',
-    5: 'polygon(50% 0%, 80% 60%, 100% 60%, 100% 70%, 50% 100%, 0% 70%, 0% 60%, 20% 60%)',
-    6: 'polygon(50% 0%, 70% 60%, 90% 50%, 90% 70%, 50% 100%, 10% 70%, 10% 50%, 30% 60%)',
-    7: 'polygon(50% 0%, 70% 60%, 90% 50%, 70% 80%, 70% 90%, 30% 90%, 30% 80%, 10% 60%, 10% 50%, 30% 60%)',
-    8: 'polygon(50% 0%, 70% 60%, 80% 50%, 80% 40%, 90% 30%, 90% 60%, 70% 80%, 70% 100%, 60% 90%, 40% 90%, 30% 100%, 30% 80%, 10% 60%, 10% 30%, 20% 40%, 20% 50%, 30% 60%)'
-}
-
-function getRandomInt(min, max) {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min)) + min; //Максимум не включается, минимум включается
-}
-
-function countNextLevel(absorberTowerLevel, eatedTowerLevel) {
-    return absorberTowerLevel + eatedTowerLevel / absorberTowerLevel;
-}
-
-// TODO:
-function countColorOnAbsorb(absorberColorId, eatedColorId) {
-    return 1;
-}
-
-// TODO:
-function countDamageMultiplier(towerColorId, enemyColorId) {
-    return 1;
-}
 
 function saveUsernameInCookies() {
     username = document.getElementById('usernameField').value;
@@ -136,23 +98,76 @@ function drawMaps(mapList) {
 class TowerModel {
     constructor(mapX, mapY) {
         this.position = {
-            X: mapX,
-            Y: mapY,
-            realX: mapX * tileLengthMultipier,
-            realY: mapY * tileLengthMultipier
+            X: mapX, // TILE
+            Y: mapY, // TILE 
+            realX: mapX * tileLengthMultipier, // CONVENTIONAL UNITS
+            realY: mapY * tileLengthMultipier // CONVENTIONAL UNITS
         }
         this.level = 1;
-        this.currentRotation = 0;
-        this.currentTarget = null;
+        this.currentRotation = 0; // DEGREES
+        this.targetRotation = 0; // DEGREES
+        this.rotationSpeed = 100; // DEGREES / SEC(???)
+        this.confidenceRange = 10; // DEGREES, TOWER WILL SHOOT AT ENEMY IF IT IS WHITHIN THIS RANGE IN DEGREES
+        this.currentTarget = null; // ENEMY MODEL
         this.colorId = getRandomInt(0, colors.length);
     }
 
     getDamage() {
-        return this.level * 100;
+        return this.level * 10;
     }
 
     update(deltaTime) {
+        // ROTATING TOWER FIRST
+        let deltaRotation = this.targetRotation - this.currentRotation;
+        if (Math.abs(deltaRotation) <= 180) {
+            if (Math.abs(deltaRotation) <= this.rotationSpeed * deltaTime) {
+                this.currentRotation = this.targetRotation;
+            } else {
+                this.currentRotation += Math.sign(deltaRotation) * deltaTime;
+            }
+        } else {
+            if (Math.abs(360 - deltaRotation) <= this.rotationSpeed * deltaTime) {
+                this.currentRotation = this.targetRotation;
+            } else {
+                if (deltaRotation > 0) {
+                    this.currentRotation = (this.currentRotation - this.rotationSpeed * deltaTime + 360) % 360;
+                } else {
+                    this.currentRotation = (this.currentRotation + this.rotationSpeed * deltaTime) % 360;
+                }
+            }
+        }
 
+        if (this.currentTarget == undefined)
+            return;
+        // FIRING AT ENEMY IF POSSIBLE
+        if (Math.abs(deltaRotation) < this.confidenceRange)
+            this.currentTarget.receiveDamage(countDamageMultiplier(this.colorId, this.currentTarget.color, colors.length));
+    }
+
+    selectEnemy(enemyList) {
+        if (enemyList.length == 0)
+            return;
+        
+        // SEARCHING FOR NEAREST ENEMY
+        let nearestEnemy = enemyList[0];
+        let currentDistance = Math.hypot(this.position.realX - nearestEnemy.position.X, this.position.realY - nearestEnemy.position.Y);
+        let minimalDistance = currentDistance;
+        for (let enemyId = 0; enemyId < enemyList.length; enemyId++) {
+            let currentEnemy = enemyList[enemyId];
+            let currentDistance = Math.hypot(this.position.realX - currentEnemy.position.X, this.position.realY - currentEnemy.position.Y);
+            if (currentDistance < minimalDistance) {
+                minimalDistance = currentDistance;
+                nearestEnemy = currentEnemy;
+            }
+        }
+
+        if (minimalDistance > towerDistanceArea) {
+            this.currentTarget = null;
+        } else {
+            this.currentTarget = nearestEnemy;
+        }
+        // COUNTING REQUIRED ROTATION
+        // TODO:
     }
 }
 
@@ -249,6 +264,7 @@ class GameModel {
         // апдейтим положение врагов и башен
         this.activeEnemyList.forEach(enemy => enemy.update(deltaTime));
         // TODO: сделать так, чтобы башни крутились в сторону первого из доступных мобов и при подходящем угле вели огонь
+        this.towerList.forEach(tower => tower.selectEnemy(this.activeEnemyList));
         this.towerList.forEach(tower => tower.update(deltaTime));
 
         // обновляем activeEnemyList, убирая убитых или достигших базы, в случае, если такие есть
@@ -308,6 +324,12 @@ class TowerView {
         this.self.style.clipPath = towerTierClipPath[truncatedTier];
         this.inner.style.clipPath = towerTierClipPath[truncatedTier];
     }
+
+    update(towerModel) {
+        this.self.style.transform = "translate(-50%, -50%);"
+        this.self.style.transform += `rotate(${towerModel.currentRotation}deg)`
+        // TODO: add rotation
+    }
 }
 
 class EnemyView {
@@ -322,10 +344,8 @@ class EnemyView {
         this.inner.style.backgroundColor = colors[enemyModel.color];
         let tileScreen = document.getElementById('tileScreen');
 
-        let rawPaddingSize = window.getComputedStyle(tileScreen).getPropertyValue("padding-left");
-        this.paddingSize = parseInt(rawPaddingSize.replace('px'));
-        // FIXME: later
         this.mapSize = { X: 800, Y: 800 };
+        this.paddingSize = 20;
 
         let truePosition = this.transformPosition(enemyModel.position, this.mapSize, this.paddingSize);
         tileScreen.appendChild(this.self);

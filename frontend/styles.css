@@ -194,6 +194,8 @@ body {
     flex-direction: row;
 }
 
+/* TILE STYLE START */
+
 .tile {
     flex-grow: 1;
     margin: 3px;
@@ -229,6 +231,10 @@ body {
     background-color: rgb(0, 110, 0);
 }
 
+/* TILE STYLE END */
+
+/* GEOMETRIC FIGURES STYLE START */
+
 .tower {
     background-color: black;
     width: 80%;
@@ -263,6 +269,8 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
 }
+
+/* GEOMETRIC FIGURES STYLE END */
 
 /* PROGRESS BAR START */
 

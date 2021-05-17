@@ -6,8 +6,8 @@ const tileLengthMultipier = 100;
 const towerDistanceArea = 250;
 const fps = 10;
 const towerTile = 't';
-const mobSpawningInterval = 1000; // mob spawn interval in milliseconds
-const groupSpawnInterval = 1000; // milliseconds between last mob killed and new group spawn
+const mobSpawningInterval = 600; // mob spawn interval in milliseconds
+const groupSpawnInterval = 10000; // milliseconds between last mob killed and new group spawn
 const gameStages = [
     'pregame',
     'game',
@@ -57,14 +57,14 @@ const towerTierClipPath = {
 }
 
 const enemyTierClipPath = {
-    1 : 'polygon(50% 0%, 80% 80%, 20% 80%)',
-    2 : 'polygon(50% 0%, 80% 80%, 50% 100%, 20% 80%)',
-    3 : 'polygon(50% 0%, 70% 60%, 90% 70%, 70% 80%, 50% 100%, 30% 80%, 10% 70%, 30% 60%)',
-    4 : 'polygon(50% 0%, 80% 60%, 100% 70%, 80% 80%, 80% 90%, 20% 90%, 20% 80%, 0% 70%, 20% 60%)',
-    5 : 'polygon(50% 0%, 80% 60%, 100% 60%, 100% 70%, 50% 100%, 0% 70%, 0% 60%, 20% 60%)',
-    6 : 'polygon(50% 0%, 70% 60%, 90% 50%, 90% 70%, 50% 100%, 10% 70%, 10% 50%, 30% 60%)',
-    7 : 'polygon(50% 0%, 70% 60%, 90% 50%, 70% 80%, 70% 90%, 30% 90%, 30% 80%, 10% 60%, 10% 50%, 30% 60%)',
-    8 : 'polygon(50% 0%, 70% 60%, 80% 50%, 80% 40%, 90% 30%, 90% 60%, 70% 80%, 70% 100%, 60% 90%, 40% 90%, 30% 100%, 30% 80%, 10% 60%, 10% 30%, 20% 40%, 20% 50%, 30% 60%)'
+    1: 'polygon(50% 0%, 80% 80%, 20% 80%)',
+    2: 'polygon(50% 0%, 80% 80%, 50% 100%, 20% 80%)',
+    3: 'polygon(50% 0%, 70% 60%, 90% 70%, 70% 80%, 50% 100%, 30% 80%, 10% 70%, 30% 60%)',
+    4: 'polygon(50% 0%, 80% 60%, 100% 70%, 80% 80%, 80% 90%, 20% 90%, 20% 80%, 0% 70%, 20% 60%)',
+    5: 'polygon(50% 0%, 80% 60%, 100% 60%, 100% 70%, 50% 100%, 0% 70%, 0% 60%, 20% 60%)',
+    6: 'polygon(50% 0%, 70% 60%, 90% 50%, 90% 70%, 50% 100%, 10% 70%, 10% 50%, 30% 60%)',
+    7: 'polygon(50% 0%, 70% 60%, 90% 50%, 70% 80%, 70% 90%, 30% 90%, 30% 80%, 10% 60%, 10% 50%, 30% 60%)',
+    8: 'polygon(50% 0%, 70% 60%, 80% 50%, 80% 40%, 90% 30%, 90% 60%, 70% 80%, 70% 100%, 60% 90%, 40% 90%, 30% 100%, 30% 80%, 10% 60%, 10% 30%, 20% 40%, 20% 50%, 30% 60%)'
 }
 
 function getRandomInt(min, max) {
@@ -164,14 +164,14 @@ class EnemyModel {
         this.waypoints = [];
         waypoints.forEach(waypoint => {
             this.waypoints.push({
-                X: waypoint.X * tileLengthMultipier + Math.trunc(tileLengthMultipier / 2), 
+                X: waypoint.X * tileLengthMultipier + Math.trunc(tileLengthMultipier / 2),
                 Y: waypoint.Y * tileLengthMultipier + Math.trunc(tileLengthMultipier / 2)
             });
         })
         this.position = this.waypoints[0];
         this.targetPosition = this.waypoints[1];
         this.nextWaypoint = 1;
-        this.speed = 1 / 10;
+        this.speed = 1 / 5; // FIXME: RIGHT FUCKING NOW
         this.reachedBase = false;
         this.rotation = 0; // TODO: use later
     }
@@ -190,21 +190,30 @@ class EnemyModel {
         }
 
         if (deltaPosition.Y == 0) {
-            if (deltaPosition.X > 0)
+            if (deltaPosition.X > 0) {
                 this.position.X = Math.min(this.position.X + deltaTime * this.speed, this.targetPosition.X);
-            else
+                this.rotation = 90;
+            }
+            else {
                 this.position.X = Math.max(this.position.X - deltaTime * this.speed, this.targetPosition.X);
+                this.rotation = 270;
+            }
         } else {
-            if (deltaPosition.Y > 0)
+            if (deltaPosition.Y > 0) {
                 this.position.Y = Math.min(this.position.Y + deltaTime * this.speed, this.targetPosition.Y);
-            else
+                this.rotation = 180;
+            }
+            else {
                 this.position.Y = Math.max(this.position.Y - deltaTime * this.speed, this.targetPosition.Y);
+                this.rotation = 0;
+            }
         }
 
         if (this.position.X == this.targetPosition.X && this.position.Y == this.targetPosition.Y) {
             this.nextWaypoint++;
             if (this.nextWaypoint == this.waypoints.length) {
                 this.reachedBase = true;
+                this.color = 2;
             } else {
                 this.targetPosition = this.waypoints[this.nextWaypoint];
             }
@@ -223,9 +232,10 @@ class GameModel {
         this.towerList = [];
         this.lastMobSpawnTime = new Date();
         this.lastGroupSpawnTime = new Date();
-        for (let y = 0; y < 10; y++) 
-            for (let x = 0; x < 10; x++) 
-                if (mapData.map[y][x] == towerTile) 
+        this.recentlyDeletedEnemy = [];
+        for (let y = 0; y < 10; y++)
+            for (let x = 0; x < 10; x++)
+                if (mapData.map[y][x] == towerTile)
                     this.towerList.push(new TowerModel(x, y));
     }
 
@@ -240,11 +250,11 @@ class GameModel {
         this.activeEnemyList.forEach(enemy => enemy.update(deltaTime));
         // TODO: сделать так, чтобы башни крутились в сторону первого из доступных мобов и при подходящем угле вели огонь
         this.towerList.forEach(tower => tower.update(deltaTime));
-        
+
         // обновляем activeEnemyList, убирая убитых или достигших базы, в случае, если такие есть
         let enemyChangedStateCount = 0;
         this.activeEnemyList.forEach(enemy => {
-            if (!enemy.isAlive || enemy.reachedBase) 
+            if (!enemy.isAlive || enemy.reachedBase)
                 enemyChangedStateCount++;
         });
         if (enemyChangedStateCount != 0) {
@@ -252,19 +262,21 @@ class GameModel {
             for (let enemyId = 0; enemyId < this.activeEnemyList.length; enemyId++) {
                 let enemy = this.activeEnemyList[enemyId];
                 if (!enemy.isAlive) {
+                    this.recentlyDeletedEnemy.push(enemy);
                     continue;
                 }
                 if (enemy.reachedBase) {
+                    this.recentlyDeletedEnemy.push(enemy);
                     this.baseHp--;
                     continue;
                 }
                 newMobList.push(enemy);
             }
-            this.activeEnemyList = newMobList;    
+            this.activeEnemyList = newMobList;
         }
 
         // апдейтим волну, если предыдущая закончена и прошло достаточно времени
-        if (this.enemyQueue.length == 0 && (new Date() - this.lastGroupSpawnTime > groupSpawnInterval)) {
+        if (this.enemyQueue.length == 0 && this.activeEnemyList.length == 0 && (new Date() - this.lastGroupSpawnTime > groupSpawnInterval)) {
             this.generateWave();
             this.currentWave++;
             this.lastGroupSpawnTime = new Date();
@@ -307,15 +319,13 @@ class EnemyView {
 
         this.self.style.clipPath = enemyTierClipPath[8];
         this.inner.style.clipPath = enemyTierClipPath[8];
-        this.inner.style.backgroundColor = colors[1]; // FIXME:
-
+        this.inner.style.backgroundColor = colors[enemyModel.color];
         let tileScreen = document.getElementById('tileScreen');
-        
+
         let rawPaddingSize = window.getComputedStyle(tileScreen).getPropertyValue("padding-left");
         this.paddingSize = parseInt(rawPaddingSize.replace('px'));
-        
-        // FIXME:
-        this.mapSize = {X: 800, Y: 800};
+        // FIXME: later
+        this.mapSize = { X: 800, Y: 800 };
 
         let truePosition = this.transformPosition(enemyModel.position, this.mapSize, this.paddingSize);
         tileScreen.appendChild(this.self);
@@ -325,10 +335,11 @@ class EnemyView {
     }
 
     update(enemyModel) {
-        // TODO:
         let truePosition = this.transformPosition(enemyModel.position, this.mapSize, this.paddingSize);
         this.self.style.left = `${truePosition.X}px`;
         this.self.style.top = `${truePosition.Y}px`;
+        this.self.style.transform = 'translate(-50%, -50%)';
+        this.self.style.transform += `rotate(${enemyModel.rotation}deg`;
     }
 
     transformPosition(modelPosition, mapSize, padding) {
@@ -336,6 +347,10 @@ class EnemyView {
             X: modelPosition.X * mapSize.X / 1000 + padding,
             Y: modelPosition.Y * mapSize.Y / 1000 + padding
         };
+    }
+
+    remove() {
+        this.self.remove();
     }
 }
 
@@ -362,22 +377,24 @@ class GameView {
             let tower = modelInfo.towerList[towerId];
             this.towerList.push(new TowerView(tower.position.X, tower.position.Y, tower.colorId))
         }
-        this.aboba = 0;
-        this.enemyList = [];
+        this.enemyList = new Map();
     }
 
     update(modelInfo) {
-        if (modelInfo.activeEnemyList.length != 0) {
-            if (this.enemyList.length == 0) {
-                this.enemyList.push(new EnemyView(modelInfo.activeEnemyList[0]));
+        for (let enemyId = 0; enemyId < modelInfo.activeEnemyList.length; enemyId++) {
+            let currentEnemy = modelInfo.activeEnemyList[enemyId];
+            if (this.enemyList.get(currentEnemy)) {
+                this.enemyList.get(currentEnemy).update(currentEnemy);
             } else {
-                this.enemyList[0].update(modelInfo.activeEnemyList[0]);
+                this.enemyList.set(currentEnemy, new EnemyView(currentEnemy));
             }
         }
-        /*
-        for (let enemyId = 0; enemyId <  modelInfo.activeEnemyList.length; enemyId++) {
-
-        }*/
+        for (let deletedEnemyId = 0; deletedEnemyId < modelInfo.recentlyDeletedEnemy.length; deletedEnemyId++) {
+            let currentEnemy = modelInfo.recentlyDeletedEnemy[deletedEnemyId];
+            this.enemyList.get(currentEnemy).remove()
+            this.enemyList.delete(currentEnemy);
+        }
+        modelInfo.recentlyDeletedEnemy = [];
     }
 }
 
@@ -415,9 +432,9 @@ const tempMap = {
         ['e', 'b', 'e', 'e', 'e', 'e', 'e', 'e', 's', 'e']
     ],
     waypoints: [
-        {X : 8, Y: 9},
-        {X : 8, Y: 1},
-        {X : 1, Y: 1},
-        {X : 1, Y: 9},
+        { X: 8, Y: 9 },
+        { X: 8, Y: 1 },
+        { X: 1, Y: 1 },
+        { X: 1, Y: 9 },
     ]
 }

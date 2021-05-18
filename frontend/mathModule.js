@@ -13,9 +13,11 @@ export function countColorOnAbsorb(absorberColorId, eatedColorId, colorCount) {
     return 1;
 }
 
-// TODO:
 export function countDamageMultiplier(towerColorId, enemyColorId, colorCount) {
-    return 0.0001;
+    let colorIdDelta = Math.abs(enemyColorId - towerColorId);
+    if (colorIdDelta > colorCount / 2)
+        colorIdDelta = colorCount - colorIdDelta;
+    return (colorCount - colorIdDelta * 2) / colorCount;
 }
 
 export function calculateSegmentAngle(dx, dy) {

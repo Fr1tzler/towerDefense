@@ -135,8 +135,9 @@ class TowerModel {
         if (Math.abs(remainingRotation) > 180) {
             remainingRotation -= Math.sign(remainingRotation) * 360;
         }
-        if (Math.abs(remainingRotation) < this.confidenceRange)
+        if (Math.abs(remainingRotation) < this.confidenceRange) {
             this.currentTarget.receiveDamage(countDamageMultiplier(this.colorId, this.currentTarget.color, colors.length));
+        } 
     }
 
     selectEnemy(enemyList) {
@@ -297,6 +298,10 @@ class GameModel {
             this.activeEnemyList.push(this.enemyQueue.shift());
             this.lastMobSpawnTime = new Date();
         }
+
+        if (this.activeEnemyList.length != 0) {
+            console.log(this.activeEnemyList[0].healthPoints);
+        }
     }
 }
 
@@ -337,7 +342,7 @@ class EnemyView {
         let tileScreen = document.getElementById('tileScreen');
 
         this.mapSize = { X: 800, Y: 800 };
-        this.paddingSize = 20;
+        this.paddingSize = 10;
 
         let truePosition = this.transformPosition(enemyModel.position, this.mapSize, this.paddingSize);
         tileScreen.appendChild(this.self);
@@ -425,11 +430,15 @@ class Game {
     constructor(mapData) {
         this.model = new GameModel(mapData);
         this.view = new GameView(this.model);
+        this.gameEnded = false;
     }
 
     update(deltaTime) {
+        if (this.gameEnded)
+            return;
         this.model.update(deltaTime);
         this.view.update(this.model);
+        this.gameEnded = !(this.model.baseHp > 0);
     }
 }
 

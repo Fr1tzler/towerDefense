@@ -32,7 +32,7 @@ body {
     width: 600px;
     height: 600px;
     position: relative;
-    border-radius: 30px;
+    border-radius: 15px;
     background-color: #333;
     flex-direction: column;
     display: flex;
@@ -63,7 +63,7 @@ body {
     flex-grow: 1;
     margin: 5px;
     background-color: #ccc;
-    border-radius: 10px;
+    border-radius: 6px;
 }
 
 .levelPage {
@@ -85,7 +85,7 @@ body {
     flex-grow: 1;
     margin: 5px;
     background-color: #999;
-    border-radius: 10px;
+    border-radius: 6px;
     transition: 100ms all ease;
 }
 
@@ -97,7 +97,7 @@ body {
     flex-grow: 1;
     background-color: gray;
     margin: 5px;
-    border-radius: 10px;
+    border-radius: 6px;
     font-size: xx-large;
     color: black;
 }
@@ -105,7 +105,7 @@ body {
 .usernameField {
     flex-grow: 1;
     margin: 5px;
-    border-radius: 10px;
+    border-radius: 6px;
     width: 600px;
     padding-left: 20px;
     font-size: x-large;
@@ -114,7 +114,7 @@ body {
 .usernameConfirmButton {
     flex-grow: 1;
     margin: 5px;
-    border-radius: 10px;
+    border-radius: 6px;
     width: 200px;
 }
 
@@ -163,11 +163,11 @@ body {
     width: 800px;
     height: 800px;
     position: relative;
-    border-radius: 30px;
+    border-radius: 15px;
     background-color: #333;
     flex-direction: column;
     display: flex;
-    padding: 20px;
+    padding: 10px;
     box-shadow: 0 0 20px 10px black;
     margin: 20px;
 }
@@ -179,11 +179,11 @@ body {
     width: 400px;
     height: 800px;
     position: relative;
-    border-radius: 30px;
+    border-radius: 15px;
     background-color: #333;
     flex-direction: column;
     display: flex;
-    padding: 20px;
+    padding: 10px;
     box-shadow: 0 0 20px 10px black;    
 }
 
@@ -199,7 +199,7 @@ body {
 .tile {
     flex-grow: 1;
     margin: 3px;
-    border-radius: 5px;
+    border-radius: 3px;
     background-color: #888;
     transition: all ease 100ms;
     display: flex;

@@ -1,12 +1,15 @@
+// FIXME: deltaTime то в секундах, то в миллисекундах, непорядок
+// FIXME: при переключении на другую вкладку всё ломается
+
 import {towerTierClipPath, enemyTierClipPath} from './geometry.js';
-import {getRandomInt, countNextLevel, countColorOnAbsorb, countDamageMultiplier} from './mathModule.js';
+import {getRandomInt, countNextLevel, countColorOnAbsorb, countDamageMultiplier, calculateSegmentAngle} from './mathModule.js';
 
 let mapPage = 0;
 let username = 'username';
 let score = 0;
 let mapId = 0;
 const tileLengthMultipier = 100;
-const towerDistanceArea = 2500000;
+const towerDistanceArea = 400;
 const fps = 10;
 const towerTile = 't';
 const mobSpawningInterval = 600; // mob spawn interval in milliseconds
@@ -106,7 +109,7 @@ class TowerModel {
         this.level = 1;
         this.currentRotation = 0; // DEGREES
         this.targetRotation = 0; // DEGREES
-        this.rotationSpeed = 100; // DEGREES / SEC(???)
+        this.rotationSpeed = 1/10; // DEGREES / MILLIS
         this.confidenceRange = 10; // DEGREES, TOWER WILL SHOOT AT ENEMY IF IT IS WHITHIN THIS RANGE IN DEGREES
         this.currentTarget = null; // ENEMY MODEL
         this.colorId = getRandomInt(0, colors.length);
@@ -117,30 +120,22 @@ class TowerModel {
     }
 
     update(deltaTime) {
-        // ROTATING TOWER FIRST
-        let deltaRotation = this.targetRotation - this.currentRotation;
-        if (Math.abs(deltaRotation) <= 180) {
-            if (Math.abs(deltaRotation) <= this.rotationSpeed * deltaTime) {
-                this.currentRotation = this.targetRotation;
-            } else {
-                this.currentRotation += Math.sign(deltaRotation) * deltaTime;
-            }
-        } else {
-            if (Math.abs(360 - deltaRotation) <= this.rotationSpeed * deltaTime) {
-                this.currentRotation = this.targetRotation;
-            } else {
-                if (deltaRotation > 0) {
-                    this.currentRotation = (this.currentRotation - this.rotationSpeed * deltaTime + 360) % 360;
-                } else {
-                    this.currentRotation = (this.currentRotation + this.rotationSpeed * deltaTime) % 360;
-                }
-            }
-        }
-
         if (this.currentTarget == undefined)
             return;
-        // FIRING AT ENEMY IF POSSIBLE
-        if (Math.abs(deltaRotation) < this.confidenceRange)
+
+        let deltaRotation = this.targetRotation - this.currentRotation;
+        if (Math.abs(deltaRotation) > 180) {
+            deltaRotation -= Math.sign(deltaRotation) * 360;
+        }
+
+        this.currentRotation += Math.sign(deltaRotation) * Math.min(this.rotationSpeed * deltaTime, Math.abs(deltaRotation));
+
+        // shoot at enemy if angle is appropriate
+        let remainingRotation = this.targetRotation - this.currentRotation;
+        if (Math.abs(remainingRotation) > 180) {
+            remainingRotation -= Math.sign(remainingRotation) * 360;
+        }
+        if (Math.abs(remainingRotation) < this.confidenceRange)
             this.currentTarget.receiveDamage(countDamageMultiplier(this.colorId, this.currentTarget.color, colors.length));
     }
 
@@ -150,14 +145,21 @@ class TowerModel {
         
         // SEARCHING FOR NEAREST ENEMY
         let nearestEnemy = enemyList[0];
+        let savedDx = nearestEnemy.position.X - this.position.realX;
+        let savedDy = nearestEnemy.position.Y - this.position.realY;
+        
         let currentDistance = Math.hypot(this.position.realX - nearestEnemy.position.X, this.position.realY - nearestEnemy.position.Y);
         let minimalDistance = currentDistance;
         for (let enemyId = 0; enemyId < enemyList.length; enemyId++) {
             let currentEnemy = enemyList[enemyId];
-            let currentDistance = Math.hypot(this.position.realX - currentEnemy.position.X, this.position.realY - currentEnemy.position.Y);
+            let dx = currentEnemy.position.X - this.position.realX;
+            let dy = currentEnemy.position.Y - this.position.realY;
+            let currentDistance = Math.hypot(dx, dy);
             if (currentDistance < minimalDistance) {
                 minimalDistance = currentDistance;
                 nearestEnemy = currentEnemy;
+                savedDx = dx;
+                savedDy = dy;
             }
         }
 
@@ -165,9 +167,8 @@ class TowerModel {
             this.currentTarget = null;
         } else {
             this.currentTarget = nearestEnemy;
-        }
-        // COUNTING REQUIRED ROTATION
-        // TODO:
+            this.targetRotation = calculateSegmentAngle(savedDx, savedDy);
+        }        
     }
 }
 
@@ -186,9 +187,9 @@ class EnemyModel {
         this.position = this.waypoints[0];
         this.targetPosition = this.waypoints[1];
         this.nextWaypoint = 1;
-        this.speed = 1 / 5; // FIXME: RIGHT FUCKING NOW
+        this.speed = 1 / 10; // CONVENTIONAL UNITS IN MILLIS
         this.reachedBase = false;
-        this.rotation = 0; // TODO: use later
+        this.currentRotation = 0;
     }
 
     receiveDamage(incomingDamage) {
@@ -207,20 +208,20 @@ class EnemyModel {
         if (deltaPosition.Y == 0) {
             if (deltaPosition.X > 0) {
                 this.position.X = Math.min(this.position.X + deltaTime * this.speed, this.targetPosition.X);
-                this.rotation = 90;
+                this.currentRotation = 90;
             }
             else {
                 this.position.X = Math.max(this.position.X - deltaTime * this.speed, this.targetPosition.X);
-                this.rotation = 270;
+                this.currentRotation = 270;
             }
         } else {
             if (deltaPosition.Y > 0) {
                 this.position.Y = Math.min(this.position.Y + deltaTime * this.speed, this.targetPosition.Y);
-                this.rotation = 180;
+                this.currentRotation = 180;
             }
             else {
                 this.position.Y = Math.max(this.position.Y - deltaTime * this.speed, this.targetPosition.Y);
-                this.rotation = 0;
+                this.currentRotation = 0;
             }
         }
 
@@ -263,34 +264,27 @@ class GameModel {
     update(deltaTime) {
         // апдейтим положение врагов и башен
         this.activeEnemyList.forEach(enemy => enemy.update(deltaTime));
-        // TODO: сделать так, чтобы башни крутились в сторону первого из доступных мобов и при подходящем угле вели огонь
         this.towerList.forEach(tower => tower.selectEnemy(this.activeEnemyList));
         this.towerList.forEach(tower => tower.update(deltaTime));
 
         // обновляем activeEnemyList, убирая убитых или достигших базы, в случае, если такие есть
-        let enemyChangedStateCount = 0;
-        this.activeEnemyList.forEach(enemy => {
-            if (!enemy.isAlive || enemy.reachedBase)
-                enemyChangedStateCount++;
-        });
-        if (enemyChangedStateCount != 0) {
-            let newMobList = [];
-            for (let enemyId = 0; enemyId < this.activeEnemyList.length; enemyId++) {
-                let enemy = this.activeEnemyList[enemyId];
-                if (!enemy.isAlive) {
-                    this.recentlyDeletedEnemy.push(enemy);
-                    continue;
-                }
-                if (enemy.reachedBase) {
-                    this.recentlyDeletedEnemy.push(enemy);
-                    this.baseHp--;
-                    continue;
-                }
-                newMobList.push(enemy);
-            }
-            this.activeEnemyList = newMobList;
-        }
 
+        let newMobList = [];
+        for (let enemyId = 0; enemyId < this.activeEnemyList.length; enemyId++) {
+            let enemy = this.activeEnemyList[enemyId];
+            if (!enemy.isAlive) {
+                this.recentlyDeletedEnemy.push(enemy);
+                continue;
+            }
+            if (enemy.reachedBase) {
+                this.recentlyDeletedEnemy.push(enemy);
+                this.baseHp--;
+                continue;
+            }
+            newMobList.push(enemy);
+        }
+        this.activeEnemyList = newMobList;
+    
         // апдейтим волну, если предыдущая закончена и прошло достаточно времени
         if (this.enemyQueue.length == 0 && this.activeEnemyList.length == 0 && (new Date() - this.lastGroupSpawnTime > groupSpawnInterval)) {
             this.generateWave();
@@ -307,15 +301,15 @@ class GameModel {
 }
 
 class TowerView {
-    constructor(mapX, mapY, colorId) {
+    constructor(tower) {
         this.self = document.createElement('div');
         this.inner = document.createElement('div');
         this.self.className = 'tower';
         this.inner.className = 'towerInner';
         this.self.style.clipPath = towerTierClipPath[1];
         this.inner.style.clipPath = towerTierClipPath[1];
-        this.inner.style.backgroundColor = colors[colorId];
-        document.getElementById(`tile_${mapX}_${mapY}`).appendChild(this.self);
+        this.inner.style.backgroundColor = colors[tower.colorId];
+        document.getElementById(`tile_${tower.position.X}_${tower.position.Y}`).appendChild(this.self);
         this.self.appendChild(this.inner);
     }
 
@@ -326,9 +320,7 @@ class TowerView {
     }
 
     update(towerModel) {
-        this.self.style.transform = "translate(-50%, -50%);"
-        this.self.style.transform += `rotate(${towerModel.currentRotation}deg)`
-        // TODO: add rotation
+        this.self.style.transform = `rotate(${towerModel.currentRotation}deg)`
     }
 }
 
@@ -359,7 +351,7 @@ class EnemyView {
         this.self.style.left = `${truePosition.X}px`;
         this.self.style.top = `${truePosition.Y}px`;
         this.self.style.transform = 'translate(-50%, -50%)';
-        this.self.style.transform += `rotate(${enemyModel.rotation}deg`;
+        this.self.style.transform += `rotate(${enemyModel.currentRotation}deg`;
     }
 
     transformPosition(modelPosition, mapSize, padding) {
@@ -392,10 +384,10 @@ class GameView {
         }
 
         // tower generation
-        this.towerList = [];
+        this.towerList = new Map();
         for (let towerId = 0; towerId < modelInfo.towerList.length; towerId++) {
             let tower = modelInfo.towerList[towerId];
-            this.towerList.push(new TowerView(tower.position.X, tower.position.Y, tower.colorId))
+            this.towerList.set(tower, new TowerView(tower));
         }
         this.enemyList = new Map();
     }
@@ -415,6 +407,11 @@ class GameView {
             this.enemyList.delete(currentEnemy);
         }
         modelInfo.recentlyDeletedEnemy = [];
+
+        for (let towerId = 0; towerId < modelInfo.towerList.length; towerId++) {
+            let tower = modelInfo.towerList[towerId];
+            this.towerList.get(tower).update(tower);
+        }
         this.updateProgressBar(modelInfo.baseHp);
     }
 

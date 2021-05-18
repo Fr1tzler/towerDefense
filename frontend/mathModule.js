@@ -17,9 +17,17 @@ export function countDamageMultiplier(towerColorId, enemyColorId, colorCount) {
     let colorIdDelta = Math.abs(enemyColorId - towerColorId);
     if (colorIdDelta > colorCount / 2)
         colorIdDelta = colorCount - colorIdDelta;
-    return (colorCount - colorIdDelta * 2) / colorCount;
+    let result = (colorCount - colorIdDelta * 2) / colorCount;
+    return result;
 }
 
 export function calculateSegmentAngle(dx, dy) {
     return 180 - Math.trunc(Math.atan2(dx, dy) * 180 / Math.PI);
+}
+
+export function calculateTileToModellCoords(coords, tileLengthMultipier) {
+    return {
+        X: coords.X * tileLengthMultipier + tileLengthMultipier / 2,
+        Y: coords.Y * tileLengthMultipier + tileLengthMultipier / 2
+    }
 }

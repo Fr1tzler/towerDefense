@@ -259,7 +259,7 @@ body {
     height: 50px;
     position: absolute;
     transform: translate(-50%, -50%);
-    transition: all ease 0.1s;
+    transition: all ease 0.03s;
 }
 
 .enemyInner {

@@ -1,8 +1,6 @@
-// FIXME: deltaTime то в секундах, то в миллисекундах, непорядок
 // FIXME: при переключении на другую вкладку всё ломается
-
-import {towerTierClipPath, enemyTierClipPath} from './geometry.js';
-import {getRandomInt, countNextLevel, countColorOnAbsorb, countDamageMultiplier, calculateSegmentAngle} from './mathModule.js';
+import { towerTierClipPath, enemyTierClipPath } from './geometry.js';
+import { getRandomInt, countNextLevel, countColorOnAbsorb, countDamageMultiplier, calculateSegmentAngle } from './mathModule.js';
 
 let mapPage = 0;
 let username = 'username';
@@ -14,9 +12,9 @@ const paddingSizePx = 10;
 
 const tileLengthMultipier = 100;
 const towerDistanceArea = 400;
-const fps = 10;
+const fps = 50;
 const towerTile = 't';
-const mobSpawningInterval = 600; // mob spawn interval in milliseconds
+const mobSpawningInterval = 800; // mob spawn interval in milliseconds
 const groupSpawnInterval = 2000; // milliseconds between last mob killed and new group spawn
 const gameStages = [
     'pregame',
@@ -66,9 +64,9 @@ function getCookie(cookieName) {
     let cookieArray = document.cookie.split(';');
     for (let cookieId = 0; cookieId < cookieArray.length; cookieId++) {
         var cookie = cookieArray[cookieId];
-        while (cookie.charAt(0) == ' ') 
+        while (cookie.charAt(0) == ' ')
             cookie = cookie.substring(1, cookie.length);
-        if (cookie.indexOf(cookieName) == 0) 
+        if (cookie.indexOf(cookieName) == 0)
             return cookie.substring(cookieName.length, cookie.length);
     }
     return null;
@@ -90,8 +88,8 @@ function requestGameStats() {
         method: 'POST',
         body: JSON.stringify(requestData),
     })
-    .then(response => { return response.json(); })
-    .then(result => { updateLeaderbords(result); })
+        .then(response => { return response.json(); })
+        .then(result => { updateLeaderbords(result); })
 }
 
 // TODO:
@@ -109,14 +107,14 @@ class TowerModel {
         this.position = {
             X: mapX, // TILE
             Y: mapY, // TILE 
-            realX: mapX * tileLengthMultipier, // CONVENTIONAL UNITS
-            realY: mapY * tileLengthMultipier // CONVENTIONAL UNITS
+            realX: mapX * tileLengthMultipier + tileLengthMultipier / 2, // CONVENTIONAL UNITS
+            realY: mapY * tileLengthMultipier + tileLengthMultipier / 2 // CONVENTIONAL UNITS
         }
         this.level = 1;
         this.currentRotation = 0; // DEGREES
         this.targetRotation = 0; // DEGREES
-        this.rotationSpeed = 1/10; // DEGREES / MILLIS
-        this.confidenceRange = 1; // DEGREES, TOWER WILL SHOOT AT ENEMY IF IT IS WHITHIN THIS RANGE IN DEGREES
+        this.rotationSpeed = 0.1; // DEGREES / MILLIS
+        this.confidenceRange = 5; // DEGREES, TOWER WILL SHOOT AT ENEMY IF IT IS WHITHIN THIS RANGE IN DEGREES
         this.currentTarget = null; // ENEMY MODEL
         this.colorId = getRandomInt(0, colors.length);
     }
@@ -128,15 +126,11 @@ class TowerModel {
     update(deltaTime, laserRayList) {
         if (this.currentTarget == undefined)
             return;
-
         let deltaRotation = this.targetRotation - this.currentRotation;
         if (Math.abs(deltaRotation) > 180) {
             deltaRotation -= Math.sign(deltaRotation) * 360;
         }
-
         this.currentRotation += Math.sign(deltaRotation) * Math.min(this.rotationSpeed * deltaTime, Math.abs(deltaRotation));
-
-        // shoot at enemy if angle is appropriate
         let remainingRotation = this.targetRotation - this.currentRotation;
         if (Math.abs(remainingRotation) > 180) {
             remainingRotation -= Math.sign(remainingRotation) * 360;
@@ -147,17 +141,16 @@ class TowerModel {
                 from: {
                     X: this.position.realX,
                     Y: this.position.realY
-                }, 
+                },
                 to: this.currentTarget.position,
                 colorId: this.colorId
             });
-        } 
+        }
     }
 
     selectEnemy(enemyList) {
         if (enemyList.length == 0)
             return;
-        
         let selectedEnemy = null;
         let deltaX = 0;
         let deltaY = 0;
@@ -175,9 +168,8 @@ class TowerModel {
         }
 
         this.currentTarget = selectedEnemy;
-        if (selectedEnemy) {
-            this.targetRotation = calculateSegmentAngle(deltaX, deltaY);    
-        }                
+        if (selectedEnemy)
+            this.targetRotation = calculateSegmentAngle(deltaX, deltaY);
     }
 }
 
@@ -196,7 +188,7 @@ class EnemyModel {
         this.position = this.waypoints[0];
         this.targetPosition = this.waypoints[1];
         this.nextWaypoint = 1;
-        this.speed = 1 / 10; // CONVENTIONAL UNITS / MILLIS
+        this.speed = 1 / 5; // CONVENTIONAL UNITS / MILLIS
         this.reachedBase = false;
         this.currentRotation = 0;
     }
@@ -218,8 +210,7 @@ class EnemyModel {
             if (deltaPosition.X > 0) {
                 this.position.X = Math.min(this.position.X + deltaTime * this.speed, this.targetPosition.X);
                 this.currentRotation = 90;
-            }
-            else {
+            } else {
                 this.position.X = Math.max(this.position.X - deltaTime * this.speed, this.targetPosition.X);
                 this.currentRotation = 270;
             }
@@ -227,13 +218,11 @@ class EnemyModel {
             if (deltaPosition.Y > 0) {
                 this.position.Y = Math.min(this.position.Y + deltaTime * this.speed, this.targetPosition.Y);
                 this.currentRotation = 180;
-            }
-            else {
+            } else {
                 this.position.Y = Math.max(this.position.Y - deltaTime * this.speed, this.targetPosition.Y);
                 this.currentRotation = 0;
             }
         }
-
         if (this.position.X == this.targetPosition.X && this.position.Y == this.targetPosition.Y) {
             this.nextWaypoint++;
             if (this.nextWaypoint == this.waypoints.length) {
@@ -274,13 +263,9 @@ class GameModel {
 
     update(deltaTime) {
         this.laserRayList = [];
-
-        // апдейтим положение врагов и башен
         this.activeEnemyList.forEach(enemy => enemy.update(deltaTime));
         this.towerList.forEach(tower => tower.selectEnemy(this.activeEnemyList));
         this.towerList.forEach(tower => tower.update(deltaTime, this.laserRayList));
-        // обновляем activeEnemyList, убирая убитых или достигших базы, в случае, если такие есть
-
         let newMobList = [];
         for (let enemyId = 0; enemyId < this.activeEnemyList.length; enemyId++) {
             let enemy = this.activeEnemyList[enemyId];
@@ -296,28 +281,20 @@ class GameModel {
             newMobList.push(enemy);
         }
         this.activeEnemyList = newMobList;
-    
-        // апдейтим волну, если предыдущая закончена и прошло достаточно времени
         if (this.enemyQueue.length == 0 && this.activeEnemyList.length == 0 && (new Date() - this.lastGroupSpawnTime > groupSpawnInterval)) {
             this.generateWave();
             this.currentWave++;
             this.lastGroupSpawnTime = new Date();
         }
-
-        // если со спавна последнего моба прошло достаточно времени, и очередь не пуста, генерим нового моба на спавне
         if (this.enemyQueue.length > 0 && (new Date - this.lastMobSpawnTime > mobSpawningInterval)) {
             this.activeEnemyList.push(this.enemyQueue.shift());
             this.lastMobSpawnTime = new Date();
         }
-
-        // пересчитываем хп у мобов
         this.totalWaveHp = 0;
-        for (let i = 0; i < this.activeEnemyList.length; i++) {
+        for (let i = 0; i < this.activeEnemyList.length; i++)
             this.totalWaveHp += this.activeEnemyList[i].healthPoints;
-        }
-        for (let i = 0; i < this.enemyQueue.length; i++) {
+        for (let i = 0; i < this.enemyQueue.length; i++)
             this.totalWaveHp += this.enemyQueue[i].healthPoints;
-        }
     }
 }
 
@@ -351,15 +328,12 @@ class EnemyView {
         this.inner = document.createElement('div');
         this.self.className = 'enemy';
         this.inner.className = 'enemyInner';
-
         this.self.style.clipPath = enemyTierClipPath[8];
         this.inner.style.clipPath = enemyTierClipPath[8];
         this.inner.style.backgroundColor = colors[enemyModel.color];
         let tileScreen = document.getElementById('tileScreen');
-
         this.mapSize = { X: 800, Y: 800 };
         this.paddingSize = 10;
-
         let truePosition = this.transformPosition(enemyModel.position, this.mapSize, this.paddingSize);
         tileScreen.appendChild(this.self);
         this.self.appendChild(this.inner);
@@ -391,20 +365,21 @@ class GameView {
     constructor(modelInfo) {
         // tile generation
         let tileScreen = document.getElementById('tileScreen');
-        for (let y = 0; y < 10; y++) {
+        for (let tileY = 0; tileY < 10; tileY++) {
             let row = document.createElement('div');
             row.className = 'tileRow';
             tileScreen.appendChild(row);
-            for (let x = 0; x < 10; x++) {
+            for (let tileX = 0; tileX < 10; tileX++) {
                 let tile = document.createElement('div');
                 tile.className = 'tile ';
-                tile.className += tileToClassDictionary[tempMap.map[y][x]];
-                tile.id = `tile_${x}_${y}`;
+                tile.className += tileToClassDictionary[tempMap.map[tileY][tileX]];
+                if (tempMap.map[tileY][tileX] == towerTile) {
+                    // FIXME:
+                }
+                tile.id = `tile_${tileX}_${tileY}`;
                 row.appendChild(tile);
             }
         }
-
-        // tower generation
         this.towerList = new Map();
         for (let towerId = 0; towerId < modelInfo.towerList.length; towerId++) {
             let tower = modelInfo.towerList[towerId];
@@ -423,11 +398,10 @@ class GameView {
     update(modelInfo) {
         for (let enemyId = 0; enemyId < modelInfo.activeEnemyList.length; enemyId++) {
             let currentEnemy = modelInfo.activeEnemyList[enemyId];
-            if (this.enemyList.get(currentEnemy)) {
+            if (this.enemyList.get(currentEnemy))
                 this.enemyList.get(currentEnemy).update(currentEnemy);
-            } else {
+            else
                 this.enemyList.set(currentEnemy, new EnemyView(currentEnemy));
-            }
         }
         for (let deletedEnemyId = 0; deletedEnemyId < modelInfo.recentlyDeletedEnemy.length; deletedEnemyId++) {
             let currentEnemy = modelInfo.recentlyDeletedEnemy[deletedEnemyId];
@@ -435,22 +409,18 @@ class GameView {
             this.enemyList.delete(currentEnemy);
         }
         modelInfo.recentlyDeletedEnemy = [];
-
         for (let towerId = 0; towerId < modelInfo.towerList.length; towerId++) {
             let tower = modelInfo.towerList[towerId];
             this.towerList.get(tower).update(tower);
         }
-
-        for (let rayId = 0; rayId < this.laserRays.length; rayId++) {
+        for (let rayId = 0; rayId < this.laserRays.length; rayId++)
             this.laserRays[rayId].remove();
-        }
         this.laserRays = [];
         this.context.clearRect(0, 0, 800, 800);
         for (let rayId = 0; rayId < modelInfo.laserRayList.length; rayId++) {
             let currentRay = modelInfo.laserRayList[rayId];
             let lineFrom = this.transformModelToCanvasCoords(currentRay.from, true);
             let lineTo = this.transformModelToCanvasCoords(currentRay.to, false);
-
             this.context.strokeStyle = colors[currentRay.colorId];
             this.context.lineWidth = 3;
             this.context.beginPath();
@@ -458,24 +428,24 @@ class GameView {
             this.context.lineTo(lineTo.X, lineTo.Y);
             this.context.closePath();
             this.context.stroke();
-            // FIXME:
         }
-
         this.updateProgressBar(modelInfo.baseHp);
         document.getElementById('waveHpValue').innerText = `${Math.trunc(modelInfo.totalWaveHp * 10) / 10}`
     }
 
     // FIXME: hardcode alert
-    transformModelToCanvasCoords(coords, isShifted) {
-        if (isShifted)
-            return {X: coords.X * 0.8 + 40, Y: coords.Y * 0.8 + 40};
-        return {X: coords.X * 0.8, Y: coords.Y * 0.8};
-        }
+    transformModelToCanvasCoords(coords) {
+        return { X: coords.X * 0.8, Y: coords.Y * 0.8 };
+    }
 
     updateProgressBar(baseHp) {
         document.getElementById('progressBarText').innerText = `${baseHp}/100`
-        document.getElementById('progressBarLine').style.right = `${100-baseHp}%`;
+        document.getElementById('progressBarLine').style.right = `${100 - baseHp}%`;
     }
+}
+
+class Controller {
+    // TODO:
 }
 
 class Game {
@@ -505,19 +475,23 @@ const tileToClassDictionary = {
 const tempMap = {
     map: [
         ['e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e'],
-        ['e', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'e'],
-        ['e', 'r', 't', 't', 't', 't', 't', 't', 'r', 'e'],
-        ['e', 'r', 't', 'e', 'e', 'e', 'e', 't', 'r', 'e'],
-        ['e', 'r', 't', 'e', 'e', 'e', 'e', 't', 'r', 'e'],
-        ['e', 'r', 't', 'e', 'e', 'e', 'e', 't', 'r', 'e'],
-        ['e', 'r', 't', 'e', 'e', 'e', 'e', 't', 'r', 'e'],
-        ['e', 'r', 't', 'e', 'e', 'e', 'e', 't', 'r', 'e'],
-        ['e', 'r', 't', 'e', 'e', 'e', 'e', 't', 'r', 'e'],
+        ['e', 'r', 'r', 'r', 'e', 'e', 'r', 'r', 'r', 'e'],
+        ['e', 'r', 't', 'r', 'e', 'e', 'r', 't', 'r', 'e'],
+        ['e', 'r', 't', 'r', 'e', 'e', 'r', 't', 'r', 'e'],
+        ['e', 'r', 't', 'r', 'e', 'e', 'r', 't', 'r', 'e'],
+        ['e', 'r', 't', 'r', 'e', 'e', 'r', 't', 'r', 'e'],
+        ['e', 'r', 't', 'r', 'e', 'e', 'r', 't', 'r', 'e'],
+        ['e', 'r', 't', 'r', 'e', 'e', 'r', 't', 'r', 'e'],
+        ['e', 'r', 't', 'r', 'r', 'r', 'r', 't', 'r', 'e'],
         ['e', 'b', 'e', 'e', 'e', 'e', 'e', 'e', 's', 'e']
     ],
     waypoints: [
         { X: 8, Y: 9 },
         { X: 8, Y: 1 },
+        { X: 6, Y: 1 },
+        { X: 6, Y: 8 },
+        { X: 3, Y: 8 },
+        { X: 3, Y: 1 },
         { X: 1, Y: 1 },
         { X: 1, Y: 9 },
     ]

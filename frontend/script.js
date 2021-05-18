@@ -8,12 +8,16 @@ let mapPage = 0;
 let username = 'username';
 let score = 0;
 let mapId = 0;
+
+const mapSizePx = 800;
+const paddingSizePx = 10;
+
 const tileLengthMultipier = 100;
 const towerDistanceArea = 400;
 const fps = 10;
 const towerTile = 't';
 const mobSpawningInterval = 600; // mob spawn interval in milliseconds
-const groupSpawnInterval = 5000; // milliseconds between last mob killed and new group spawn
+const groupSpawnInterval = 2000; // milliseconds between last mob killed and new group spawn
 const gameStages = [
     'pregame',
     'game',
@@ -62,8 +66,10 @@ function getCookie(cookieName) {
     let cookieArray = document.cookie.split(';');
     for (let cookieId = 0; cookieId < cookieArray.length; cookieId++) {
         var cookie = cookieArray[cookieId];
-        while (cookie.charAt(0) == ' ') cookie = cookie.substring(1, cookie.length);
-        if (cookie.indexOf(cookieName) == 0) return cookie.substring(cookieName.length, cookie.length);
+        while (cookie.charAt(0) == ' ') 
+            cookie = cookie.substring(1, cookie.length);
+        if (cookie.indexOf(cookieName) == 0) 
+            return cookie.substring(cookieName.length, cookie.length);
     }
     return null;
 }
@@ -84,18 +90,18 @@ function requestGameStats() {
         method: 'POST',
         body: JSON.stringify(requestData),
     })
-        .then(response => { return response.json(); })
-        .then(result => { updateLeaderbords(result); })
+    .then(response => { return response.json(); })
+    .then(result => { updateLeaderbords(result); })
 }
 
 // TODO:
 function updateLeaderbords(leaders) {
-    console.log(leaders);
+    return;
 }
 
 //TODO: отрисовка страницы с картами на стартовом экране
 function drawMaps(mapList) {
-    console.log(mapList);
+    return;
 }
 
 class TowerModel {
@@ -110,7 +116,7 @@ class TowerModel {
         this.currentRotation = 0; // DEGREES
         this.targetRotation = 0; // DEGREES
         this.rotationSpeed = 1/10; // DEGREES / MILLIS
-        this.confidenceRange = 10; // DEGREES, TOWER WILL SHOOT AT ENEMY IF IT IS WHITHIN THIS RANGE IN DEGREES
+        this.confidenceRange = 1; // DEGREES, TOWER WILL SHOOT AT ENEMY IF IT IS WHITHIN THIS RANGE IN DEGREES
         this.currentTarget = null; // ENEMY MODEL
         this.colorId = getRandomInt(0, colors.length);
     }
@@ -119,7 +125,7 @@ class TowerModel {
         return this.level * 10;
     }
 
-    update(deltaTime) {
+    update(deltaTime, laserRayList) {
         if (this.currentTarget == undefined)
             return;
 
@@ -137,6 +143,14 @@ class TowerModel {
         }
         if (Math.abs(remainingRotation) < this.confidenceRange) {
             this.currentTarget.receiveDamage(countDamageMultiplier(this.colorId, this.currentTarget.color, colors.length));
+            laserRayList.push({
+                from: {
+                    X: this.position.realX,
+                    Y: this.position.realY
+                }, 
+                to: this.currentTarget.position,
+                colorId: this.colorId
+            });
         } 
     }
 
@@ -144,32 +158,26 @@ class TowerModel {
         if (enemyList.length == 0)
             return;
         
-        // SEARCHING FOR NEAREST ENEMY
-        let nearestEnemy = enemyList[0];
-        let savedDx = nearestEnemy.position.X - this.position.realX;
-        let savedDy = nearestEnemy.position.Y - this.position.realY;
-        
-        let currentDistance = Math.hypot(this.position.realX - nearestEnemy.position.X, this.position.realY - nearestEnemy.position.Y);
-        let minimalDistance = currentDistance;
-        for (let enemyId = 0; enemyId < enemyList.length; enemyId++) {
-            let currentEnemy = enemyList[enemyId];
+        let selectedEnemy = null;
+        let deltaX = 0;
+        let deltaY = 0;
+        for (let i = 0; i < enemyList.length; i++) {
+            let currentEnemy = enemyList[i];
             let dx = currentEnemy.position.X - this.position.realX;
             let dy = currentEnemy.position.Y - this.position.realY;
             let currentDistance = Math.hypot(dx, dy);
-            if (currentDistance < minimalDistance) {
-                minimalDistance = currentDistance;
-                nearestEnemy = currentEnemy;
-                savedDx = dx;
-                savedDy = dy;
+            if (currentDistance < towerDistanceArea) {
+                selectedEnemy = currentEnemy
+                deltaX = dx;
+                deltaY = dy;
+                break;
             }
         }
 
-        if (minimalDistance > towerDistanceArea) {
-            this.currentTarget = null;
-        } else {
-            this.currentTarget = nearestEnemy;
-            this.targetRotation = calculateSegmentAngle(savedDx, savedDy);
-        }        
+        this.currentTarget = selectedEnemy;
+        if (selectedEnemy) {
+            this.targetRotation = calculateSegmentAngle(deltaX, deltaY);    
+        }                
     }
 }
 
@@ -188,7 +196,7 @@ class EnemyModel {
         this.position = this.waypoints[0];
         this.targetPosition = this.waypoints[1];
         this.nextWaypoint = 1;
-        this.speed = 1 / 10; // CONVENTIONAL UNITS IN MILLIS
+        this.speed = 1 / 10; // CONVENTIONAL UNITS / MILLIS
         this.reachedBase = false;
         this.currentRotation = 0;
     }
@@ -254,6 +262,8 @@ class GameModel {
             for (let x = 0; x < 10; x++)
                 if (mapData.map[y][x] == towerTile)
                     this.towerList.push(new TowerModel(x, y));
+        this.totalWaveHp = 0;
+        this.laserRayList = [];
     }
 
     generateWave() {
@@ -263,11 +273,12 @@ class GameModel {
     }
 
     update(deltaTime) {
+        this.laserRayList = [];
+
         // апдейтим положение врагов и башен
         this.activeEnemyList.forEach(enemy => enemy.update(deltaTime));
         this.towerList.forEach(tower => tower.selectEnemy(this.activeEnemyList));
-        this.towerList.forEach(tower => tower.update(deltaTime));
-
+        this.towerList.forEach(tower => tower.update(deltaTime, this.laserRayList));
         // обновляем activeEnemyList, убирая убитых или достигших базы, в случае, если такие есть
 
         let newMobList = [];
@@ -299,8 +310,13 @@ class GameModel {
             this.lastMobSpawnTime = new Date();
         }
 
-        if (this.activeEnemyList.length != 0) {
-            console.log(this.activeEnemyList[0].healthPoints);
+        // пересчитываем хп у мобов
+        this.totalWaveHp = 0;
+        for (let i = 0; i < this.activeEnemyList.length; i++) {
+            this.totalWaveHp += this.activeEnemyList[i].healthPoints;
+        }
+        for (let i = 0; i < this.enemyQueue.length; i++) {
+            this.totalWaveHp += this.enemyQueue[i].healthPoints;
         }
     }
 }
@@ -395,6 +411,13 @@ class GameView {
             this.towerList.set(tower, new TowerView(tower));
         }
         this.enemyList = new Map();
+        this.laserRays = [];
+        let canvas = document.getElementById('laserRayLayer');
+        canvas.style.width = '800px';
+        canvas.style.height = '800px';
+        canvas.style.top = '10px';
+        canvas.style.left = '10px';
+        this.context = canvas.getContext('2d');
     }
 
     update(modelInfo) {
@@ -417,8 +440,37 @@ class GameView {
             let tower = modelInfo.towerList[towerId];
             this.towerList.get(tower).update(tower);
         }
+
+        for (let rayId = 0; rayId < this.laserRays.length; rayId++) {
+            this.laserRays[rayId].remove();
+        }
+        this.laserRays = [];
+        this.context.clearRect(0, 0, 800, 800);
+        for (let rayId = 0; rayId < modelInfo.laserRayList.length; rayId++) {
+            let currentRay = modelInfo.laserRayList[rayId];
+            let lineFrom = this.transformModelToCanvasCoords(currentRay.from, true);
+            let lineTo = this.transformModelToCanvasCoords(currentRay.to, false);
+
+            this.context.strokeStyle = colors[currentRay.colorId];
+            this.context.lineWidth = 3;
+            this.context.beginPath();
+            this.context.moveTo(lineFrom.X, lineFrom.Y);
+            this.context.lineTo(lineTo.X, lineTo.Y);
+            this.context.closePath();
+            this.context.stroke();
+            // FIXME:
+        }
+
         this.updateProgressBar(modelInfo.baseHp);
+        document.getElementById('waveHpValue').innerText = `${Math.trunc(modelInfo.totalWaveHp * 10) / 10}`
     }
+
+    // FIXME: hardcode alert
+    transformModelToCanvasCoords(coords, isShifted) {
+        if (isShifted)
+            return {X: coords.X * 0.8 + 40, Y: coords.Y * 0.8 + 40};
+        return {X: coords.X * 0.8, Y: coords.Y * 0.8};
+        }
 
     updateProgressBar(baseHp) {
         document.getElementById('progressBarText').innerText = `${baseHp}/100`
@@ -435,7 +487,7 @@ class Game {
 
     update(deltaTime) {
         if (this.gameEnded)
-            return;
+            alert('you lost, refresh page');
         this.model.update(deltaTime);
         this.view.update(this.model);
         this.gameEnded = !(this.model.baseHp > 0);

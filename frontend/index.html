@@ -9,7 +9,8 @@
     <script src="geometry.js" type="module"></script>
     <script src="mathModule.js" type="module"></script>
     <script src='script.js' type="module"></script>
-    <link rel='stylesheet' href='styles.css' />
+    <link rel='stylesheet' href='styles/styles.css' />
+    <link rel='stylesheet' href='styles/infoPanelStyles.css' />
     <title>towerDefense</title>
 </head>
 
@@ -59,9 +60,13 @@
                     </div>
                 </div>
                 <!-- SOMETHING ELSE -->
-
+                <div class="waveInfoContainer">
+                    <h2>Current wave HP:</h2>
+                    <div class="waveInfoText" id='waveHpValue'>0</div>
+                </div>
             </div>
             <div class='tilePanel' id='tileScreen'>
+                <canvas class="laserRayLayer" id="laserRayLayer" height="800" width="800"></canvas>
             </div>
         </div>
     </div>

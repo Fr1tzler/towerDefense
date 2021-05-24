@@ -62,13 +62,12 @@ function saveUsernameInCookies() {
 function getCookie(cookieName) {
     cookieName += "=";
     let cookieArray = document.cookie.split(';');
-    for (let cookieId = 0; cookieId < cookieArray.length; cookieId++) {
-        var cookie = cookieArray[cookieId];
+    cookieArray.forEach((cookie) => {
         while (cookie.charAt(0) == ' ')
             cookie = cookie.substring(1, cookie.length);
         if (cookie.indexOf(cookieName) == 0)
             return cookie.substring(cookieName.length, cookie.length);
-    }
+    })
     return null;
 }
 
@@ -127,14 +126,12 @@ class TowerModel {
         if (this.currentTarget == undefined)
             return;
         let deltaRotation = this.targetRotation - this.currentRotation;
-        if (Math.abs(deltaRotation) > 180) {
+        if (Math.abs(deltaRotation) > 180)
             deltaRotation -= Math.sign(deltaRotation) * 360;
-        }
         this.currentRotation += Math.sign(deltaRotation) * Math.min(this.rotationSpeed * deltaTime, Math.abs(deltaRotation));
         let remainingRotation = this.targetRotation - this.currentRotation;
-        if (Math.abs(remainingRotation) > 180) {
+        if (Math.abs(remainingRotation) > 180)
             remainingRotation -= Math.sign(remainingRotation) * 360;
-        }
         if (Math.abs(remainingRotation) < this.confidenceRange) {
             this.currentTarget.receiveDamage(countDamageMultiplier(this.colorId, this.currentTarget.color, colors.length));
             laserRayList.push({
@@ -175,7 +172,7 @@ class TowerModel {
 
 class EnemyModel {
     constructor(waypoints, color) {
-        this.healthPoints = 100;
+        this.healthPoints = 300; // TODO: балансные правки
         this.color = color;
         this.isAlive = true;
         this.waypoints = [];
@@ -268,19 +265,17 @@ class GameModel {
         this.towerList.forEach(tower => tower.selectEnemy(this.activeEnemyList));
         this.towerList.forEach(tower => tower.update(deltaTime, this.laserRayList));
         let newMobList = [];
-        for (let enemyId = 0; enemyId < this.activeEnemyList.length; enemyId++) {
-            let enemy = this.activeEnemyList[enemyId];
+        this.activeEnemyList.forEach((enemy) => {
             if (!enemy.isAlive) {
                 this.recentlyDeletedEnemy.push(enemy);
-                continue;
             }
-            if (enemy.reachedBase) {
+            else if (enemy.reachedBase) {
                 this.recentlyDeletedEnemy.push(enemy);
                 this.baseHp--;
-                continue;
+            } else {
+                newMobList.push(enemy);
             }
-            newMobList.push(enemy);
-        }
+        })
         this.activeEnemyList = newMobList;
         if (this.enemyQueue.length == 0 && this.activeEnemyList.length == 0 && (new Date() - this.lastGroupSpawnTime > groupSpawnInterval)) {
             this.generateWave();
@@ -367,6 +362,7 @@ class GameView {
         // tile generation
         let tileScreen = document.getElementById('tileScreen');
         this.towerTileList = [];
+        let mapInfo = modelInfo.mapData;
         for (let tileY = 0; tileY < 10; tileY++) {
             let row = document.createElement('div');
             row.className = 'tileRow';
@@ -374,19 +370,17 @@ class GameView {
             for (let tileX = 0; tileX < 10; tileX++) {
                 let tile = document.createElement('div');
                 tile.className = 'tile ';
-                tile.className += tileToClassDictionary[tempMap.map[tileY][tileX]];
+                tile.className += tileToClassDictionary[mapInfo.map[tileY][tileX]];
                 tile.id = `tile_${tileX}_${tileY}`;
-                if (tempMap.map[tileY][tileX] == towerTile) {
+                if (mapInfo.map[tileY][tileX] == towerTile)
                     this.towerTileList.push(tile);
-                }
                 row.appendChild(tile);
             }
         }
         this.towerList = new Map();
-        for (let towerId = 0; towerId < modelInfo.towerList.length; towerId++) {
-            let tower = modelInfo.towerList[towerId];
+        modelInfo.towerList.forEach((tower) => {
             this.towerList.set(tower, new TowerView(tower));
-        }
+        })
         this.enemyList = new Map();
         this.laserRays = [];
         let canvas = document.getElementById('laserRayLayer');
@@ -398,29 +392,23 @@ class GameView {
     }
 
     update(modelInfo) {
-        for (let enemyId = 0; enemyId < modelInfo.activeEnemyList.length; enemyId++) {
-            let currentEnemy = modelInfo.activeEnemyList[enemyId];
-            if (this.enemyList.get(currentEnemy))
-                this.enemyList.get(currentEnemy).update(currentEnemy);
+        modelInfo.activeEnemyList.forEach((enemy) => {
+            if (this.enemyList.get(enemy))
+                this.enemyList.get(enemy).update(enemy);
             else
-                this.enemyList.set(currentEnemy, new EnemyView(currentEnemy));
-        }
-        for (let deletedEnemyId = 0; deletedEnemyId < modelInfo.recentlyDeletedEnemy.length; deletedEnemyId++) {
-            let currentEnemy = modelInfo.recentlyDeletedEnemy[deletedEnemyId];
-            this.enemyList.get(currentEnemy).remove()
-            this.enemyList.delete(currentEnemy);
-        }
+                this.enemyList.set(enemy, new EnemyView(enemy));
+        })
+        modelInfo.recentlyDeletedEnemy.forEach((enemy) => {
+            this.enemyList.get(enemy).remove()
+            this.enemyList.delete(enemy);
+        })
+
         modelInfo.recentlyDeletedEnemy = [];
-        for (let towerId = 0; towerId < modelInfo.towerList.length; towerId++) {
-            let tower = modelInfo.towerList[towerId];
-            this.towerList.get(tower).update(tower);
-        }
-        for (let rayId = 0; rayId < this.laserRays.length; rayId++)
-            this.laserRays[rayId].remove();
+        modelInfo.towerList.forEach((tower) => { this.towerList.get(tower).update(tower); })
+        this.laserRays.forEach((ray) => {ray.remove()});
         this.laserRays = [];
         this.context.clearRect(0, 0, 800, 800);
-        for (let rayId = 0; rayId < modelInfo.laserRayList.length; rayId++) {
-            let currentRay = modelInfo.laserRayList[rayId];
+        modelInfo.laserRayList.forEach((currentRay) => {
             let lineFrom = this.transformModelToCanvasCoords(currentRay.from, true);
             let lineTo = this.transformModelToCanvasCoords(currentRay.to, false);
             this.context.strokeStyle = colors[currentRay.colorId];
@@ -430,15 +418,14 @@ class GameView {
             this.context.lineTo(lineTo.X, lineTo.Y);
             this.context.closePath();
             this.context.stroke();
-        }
+        })
         this.updateProgressBar(modelInfo.baseHp);
         document.getElementById('waveHpValue').innerText = `${Math.trunc(modelInfo.totalWaveHp * 10) / 10}`
 
         this.towerTileList.forEach((tile) => {tile.style.backgroundColor = "#888"});
-        for (let i = 0; i < modelInfo.activeTowerList.length; i++) {
-            let tileCoords = modelInfo.activeTowerList[i]; 
+        modelInfo.activeTowerList.forEach((tileCoords) => {
             document.getElementById(`tile_${tileCoords.X}_${tileCoords.Y}`).style.backgroundColor = "#AAA";
-        }
+        })
     }
 
     // FIXME: hardcode alert
@@ -466,9 +453,10 @@ class GameController {
     }
 
     makeTowerActive(towerX, towerY) {
-        for (let activeTowerId = 0; activeTowerId < this.activeTowerList.length; activeTowerId++)
-            if (this.activeTowerList[activeTowerId].X == towerX && this.activeTowerList[activeTowerId].Y == towerY)
+        this.activeTowerList.forEach((tileCoords) => {
+            if (tileCoords.X == towerX && tileCoords.Y == towerY)
                 return
+        })
         this.activeTowerList.push({X: towerX, Y: towerY});
         if (this.activeTowerList.length > 2)
             this.activeTowerList.shift();
@@ -485,7 +473,7 @@ class Game {
 
     update(deltaTime) {
         if (this.gameEnded)
-            alert('you lost, refresh page');
+            return
         this.model.update(deltaTime);
         this.view.update(this.model);
         this.gameEnded = !(this.model.baseHp > 0);

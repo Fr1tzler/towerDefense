@@ -15,6 +15,7 @@ body {
     background-color: #222;
     font-family: 'Gardens CM';
     color: white;
+    user-select: none;
 }
 
 .screenContainer {
@@ -145,7 +146,7 @@ body {
 .visualCross {
     height: 20px;
     width: 20px;
-    background-color: white;
+    background-color: #666;
     clip-path: polygon(45% 0%, 55% 0%, 55% 45%, 100% 45%, 100% 55%, 55% 55%, 55% 100%, 45% 100%, 45% 55%, 0% 55%, 0% 45%, 45% 45%);
     transform: rotate(45deg);
 }

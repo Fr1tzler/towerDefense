@@ -81,6 +81,41 @@
     position: relative;
     margin: 5px;
     border-radius: 5px;
+    display: flex;
+    flex-direction: row;
+}
+
+.towerInfoImage {
+    position: relative;
+    background-color: #333;
+    border-radius: 5px;
+    flex-grow: 1;
+    margin: 5px;
+}
+
+.towerInfoData {
+    position: relative;
+    background-color: #555;
+    border-radius: 5px;
+    flex-grow: 1;
+    margin: 5px;
+}
+
+.towerMergeButton {
+    background-color: #222;
+    position: relative;
+    margin: 5px;
+    border-radius: 5px;
+    height: min-content;
+    flex-grow: 1;
+}
+
+.mergeButtonLabel {
+    position: absolute;
+    height: min-content;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 /* TOWER MERGE END */

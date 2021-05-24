@@ -114,7 +114,7 @@ class TowerModel {
         this.level = 1;
         this.currentRotation = 0; // DEGREES
         this.targetRotation = 0; // DEGREES
-        this.rotationSpeed = 0.1; // DEGREES / MILLIS
+        this.rotationSpeed = 0.25; // DEGREES / MILLIS
         this.confidenceRange = 5; // DEGREES, TOWER WILL SHOOT AT ENEMY IF IT IS WHITHIN THIS RANGE IN DEGREES
         this.currentTarget = null; // ENEMY MODEL
         this.colorId = getRandomInt(0, colors.length);
@@ -398,6 +398,7 @@ class GameView {
         canvas.style.top = '10px';
         canvas.style.left = '10px';
         this.context = canvas.getContext('2d');
+        this.previousSelectedTowers = [];
     }
 
     update() {
@@ -435,23 +436,49 @@ class GameView {
         this.origin.selectedTowers.forEach((tower) => {
             document.getElementById(`tile_${tower.position.X}_${tower.position.Y}`).style.backgroundColor = "#AAA";
         })
-        if (this.origin.selectedTowers.length == 2) {
-            let towerMin = this.origin.selectedTowers[0];
-            let towerMax = this.origin.selectedTowers[1];
-            if (towerMin.level > towerMax.level) {
-                let temp = towerMin;
-                towerMin = towerMax;
-                towerMax = temp;
+        if (this.previousSelectedTowers == this.origin.selectedTowers) {}
+        else {
+            if (this.origin.selectedTowers.length == 2) {
+                let towerMin = this.origin.selectedTowers[0];
+                let towerMax = this.origin.selectedTowers[1];
+                if (towerMin.level > towerMax.level) {
+                    let temp = towerMin;
+                    towerMin = towerMax;
+                    towerMax = temp;
+                }
+                this.renderTowerInTowerInfo(towerMax, 1);
+                this.renderTowerInTowerInfo(towerMin, 2);
+            } else if (this.origin.selectedTowers.length == 1) {
+                this.renderTowerInTowerInfo(this.origin.selectedTowers[0], 1);
+            } else {
+                this.clearTowerInfo();
             }
-            this.renderTowerInTowerInfo(towerMax, 1);
-            this.renderTowerInTowerInfo(towerMin, 2);
         }
     }
 
     renderTowerInTowerInfo(tower, id) {
-        let container = document.getElementById(`towerInfo${id}`);
-        container.innerText = JSON.stringify(tower.position);
-        // TODO:
+        let towerImageContainer = document.getElementById(`towerInfoImage${id}`);
+        let towerDataContainer = document.getElementById(`towerInfoData${id}`);
+        towerImageContainer.innerHTML = '';
+        towerDataContainer.innerHTML = '';
+        let towerImage = document.createElement('div');
+        towerImage.className = 'tower';
+        let towerImageInner = document.createElement('div');
+        towerImageInner.className = 'towerInner';
+        towerImageContainer.appendChild(towerImage);
+        towerImage.style.clipPath = towerTierClipPath[Math.trunc(tower.level)];
+        towerImage.style.position = 'absolute';
+        towerImage.appendChild(towerImageInner);
+        towerImageInner.style.clipPath = towerTierClipPath[Math.trunc(tower.level)];
+        towerImageInner.style.backgroundColor = colors[tower.colorId];
+        towerImageInner.style.position = 'absolute';
+    }
+
+    clearTowerInfo() {
+        for (let id = 1; id <= 3; id++) {
+            document.getElementById(`towerInfoImage${id}`).innerHTML = '';
+            document.getElementById(`towerInfoData${id}`).innerHTML = '';
+        }
     }
 
     // FIXME: hardcode alert

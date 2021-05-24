@@ -23,12 +23,12 @@ const gameStages = [
 ]
 let currentGameStage = 0;
 
-
 document.addEventListener('DOMContentLoaded', init);
 
 function init() {
-    // TODO: если такой куки нет, делать значение просто 'username'
-    document.getElementById('usernameField').value = getCookie('username');
+    let usernameCookie = getCookie('username');
+    if (usernameCookie)
+        document.getElementById('usernameField').value = usernameCookie;
     document.getElementById('confirmUsername').addEventListener('click', saveUsernameInCookies);
 
     let game = new Game(tempMap);
@@ -36,6 +36,8 @@ function init() {
 }
 
 function mainloop(game) {
+    if (game.gameEnded)
+        return;
     game.update(1000 / fps);
 }
 
@@ -250,7 +252,7 @@ class GameModel {
                     this.towerList.push(new TowerModel(x, y));
         this.totalWaveHp = 0;
         this.laserRayList = [];
-        this.activeTowerList = [];
+        this.selectedTowers = [];
     }
 
     generateWave() {
@@ -292,10 +294,15 @@ class GameModel {
         for (let i = 0; i < this.enemyQueue.length; i++)
             this.totalWaveHp += this.enemyQueue[i].healthPoints;
     }
+
+    mergeTowers(tower1, tower2) {
+        // TODO:
+    }
 }
 
 class TowerView {
     constructor(tower) {
+        this.origin = tower;
         this.self = document.createElement('div');
         this.inner = document.createElement('div');
         this.self.className = 'tower';
@@ -313,13 +320,14 @@ class TowerView {
         this.inner.style.clipPath = towerTierClipPath[truncatedTier];
     }
 
-    update(towerModel) {
-        this.self.style.transform = `rotate(${towerModel.currentRotation}deg)`
+    update() {
+        this.self.style.transform = `rotate(${this.origin.currentRotation}deg)`
     }
 }
 
 class EnemyView {
     constructor(enemyModel) {
+        this.origin = enemyModel;
         this.self = document.createElement('div');
         this.inner = document.createElement('div');
         this.self.className = 'enemy';
@@ -337,12 +345,12 @@ class EnemyView {
         this.self.style.top = `${truePosition.Y}px`;
     }
 
-    update(enemyModel) {
-        let truePosition = this.transformPosition(enemyModel.position, this.mapSize, this.paddingSize);
+    update() {
+        let truePosition = this.transformPosition(this.origin.position, this.mapSize, this.paddingSize);
         this.self.style.left = `${truePosition.X}px`;
         this.self.style.top = `${truePosition.Y}px`;
         this.self.style.transform = 'translate(-50%, -50%)';
-        this.self.style.transform += `rotate(${enemyModel.currentRotation}deg`;
+        this.self.style.transform += `rotate(${this.origin.currentRotation}deg`;
     }
 
     transformPosition(modelPosition, mapSize, padding) {
@@ -359,6 +367,7 @@ class EnemyView {
 
 class GameView {
     constructor(modelInfo) {
+        this.origin = modelInfo;
         // tile generation
         let tileScreen = document.getElementById('tileScreen');
         this.towerTileList = [];
@@ -391,24 +400,24 @@ class GameView {
         this.context = canvas.getContext('2d');
     }
 
-    update(modelInfo) {
-        modelInfo.activeEnemyList.forEach((enemy) => {
+    update() {
+        this.origin.activeEnemyList.forEach((enemy) => {
             if (this.enemyList.get(enemy))
-                this.enemyList.get(enemy).update(enemy);
+                this.enemyList.get(enemy).update();
             else
                 this.enemyList.set(enemy, new EnemyView(enemy));
         })
-        modelInfo.recentlyDeletedEnemy.forEach((enemy) => {
-            this.enemyList.get(enemy).remove()
+        this.origin.recentlyDeletedEnemy.forEach((enemy) => {
+            this.enemyList.get(enemy).remove();
             this.enemyList.delete(enemy);
         })
 
-        modelInfo.recentlyDeletedEnemy = [];
-        modelInfo.towerList.forEach((tower) => { this.towerList.get(tower).update(tower); })
+        this.origin.recentlyDeletedEnemy = [];
+        this.origin.towerList.forEach((tower) => { this.towerList.get(tower).update(); })
         this.laserRays.forEach((ray) => {ray.remove()});
         this.laserRays = [];
         this.context.clearRect(0, 0, 800, 800);
-        modelInfo.laserRayList.forEach((currentRay) => {
+        this.origin.laserRayList.forEach((currentRay) => {
             let lineFrom = this.transformModelToCanvasCoords(currentRay.from, true);
             let lineTo = this.transformModelToCanvasCoords(currentRay.to, false);
             this.context.strokeStyle = colors[currentRay.colorId];
@@ -419,13 +428,30 @@ class GameView {
             this.context.closePath();
             this.context.stroke();
         })
-        this.updateProgressBar(modelInfo.baseHp);
-        document.getElementById('waveHpValue').innerText = `${Math.trunc(modelInfo.totalWaveHp * 10) / 10}`
+        this.updateProgressBar();
+        document.getElementById('waveHpValue').innerText = `${Math.trunc(this.origin.totalWaveHp * 10) / 10}`
 
         this.towerTileList.forEach((tile) => {tile.style.backgroundColor = "#888"});
-        modelInfo.activeTowerList.forEach((tileCoords) => {
-            document.getElementById(`tile_${tileCoords.X}_${tileCoords.Y}`).style.backgroundColor = "#AAA";
+        this.origin.selectedTowers.forEach((tower) => {
+            document.getElementById(`tile_${tower.position.X}_${tower.position.Y}`).style.backgroundColor = "#AAA";
         })
+        if (this.origin.selectedTowers.length == 2) {
+            let towerMin = this.origin.selectedTowers[0];
+            let towerMax = this.origin.selectedTowers[1];
+            if (towerMin.level > towerMax.level) {
+                let temp = towerMin;
+                towerMin = towerMax;
+                towerMax = temp;
+            }
+            this.renderTowerInTowerInfo(towerMax, 1);
+            this.renderTowerInTowerInfo(towerMin, 2);
+        }
+    }
+
+    renderTowerInTowerInfo(tower, id) {
+        let container = document.getElementById(`towerInfo${id}`);
+        container.innerText = JSON.stringify(tower.position);
+        // TODO:
     }
 
     // FIXME: hardcode alert
@@ -433,7 +459,8 @@ class GameView {
         return { X: coords.X * 0.8, Y: coords.Y * 0.8 };
     }
 
-    updateProgressBar(baseHp) {
+    updateProgressBar() {
+        let baseHp = this.origin.baseHp;
         document.getElementById('progressBarText').innerText = `${baseHp}/100`
         document.getElementById('progressBarLine').style.right = `${100 - baseHp}%`;
     }
@@ -441,7 +468,8 @@ class GameView {
 
 class GameController {
     constructor (modelInfo) {
-        this.activeTowerList = modelInfo.activeTowerList; // храним ссылку на список в модели, так удобнее туда писать
+        this.origin = modelInfo;
+        this.selectedTowers = modelInfo.selectedTowers; // храним ссылку на список в модели, так удобнее туда писать
         for (let y = 0; y < modelInfo.mapData.map.length; y++) {
             for (let x = 0; x < modelInfo.mapData.map[y].length; x++) {
                 if (modelInfo.mapData.map[y][x] == towerTile) {
@@ -453,13 +481,19 @@ class GameController {
     }
 
     makeTowerActive(towerX, towerY) {
-        this.activeTowerList.forEach((tileCoords) => {
-            if (tileCoords.X == towerX && tileCoords.Y == towerY)
-                return
-        })
-        this.activeTowerList.push({X: towerX, Y: towerY});
-        if (this.activeTowerList.length > 2)
-            this.activeTowerList.shift();
+        for (let selectedTowerId = 0; selectedTowerId < this.selectedTowers.length; selectedTowerId++) {
+            let tower = this.selectedTowers[selectedTowerId];
+            if (tower.position.X == towerX && tower.position.Y == towerY)
+                return;
+        }
+        for (let towerId = 0; towerId < this.origin.towerList.length; towerId++) {
+            let tower = this.origin.towerList[towerId];
+            if (tower.position.X == towerX && tower.position.Y == towerY) {
+                this.selectedTowers.push(tower);
+            }
+        }
+        if (this.selectedTowers.length > 2)
+            this.selectedTowers.shift();
     }
 }
 
@@ -473,9 +507,9 @@ class Game {
 
     update(deltaTime) {
         if (this.gameEnded)
-            return
+            return;
         this.model.update(deltaTime);
-        this.view.update(this.model);
+        this.view.update();
         this.gameEnded = !(this.model.baseHp > 0);
     }
 }

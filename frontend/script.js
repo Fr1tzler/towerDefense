@@ -247,12 +247,13 @@ class GameModel {
         this.lastMobSpawnTime = new Date();
         this.lastGroupSpawnTime = new Date();
         this.recentlyDeletedEnemy = [];
-        for (let y = 0; y < 10; y++)
-            for (let x = 0; x < 10; x++)
+        for (let y = 0; y < mapData.map.length; y++)
+            for (let x = 0; x < mapData.map[y].length; x++)
                 if (mapData.map[y][x] == towerTile)
                     this.towerList.push(new TowerModel(x, y));
         this.totalWaveHp = 0;
         this.laserRayList = [];
+        this.activeTowerList = [];
     }
 
     generateWave() {
@@ -365,6 +366,7 @@ class GameView {
     constructor(modelInfo) {
         // tile generation
         let tileScreen = document.getElementById('tileScreen');
+        this.towerTileList = [];
         for (let tileY = 0; tileY < 10; tileY++) {
             let row = document.createElement('div');
             row.className = 'tileRow';
@@ -373,10 +375,10 @@ class GameView {
                 let tile = document.createElement('div');
                 tile.className = 'tile ';
                 tile.className += tileToClassDictionary[tempMap.map[tileY][tileX]];
-                if (tempMap.map[tileY][tileX] == towerTile) {
-                    // FIXME:
-                }
                 tile.id = `tile_${tileX}_${tileY}`;
+                if (tempMap.map[tileY][tileX] == towerTile) {
+                    this.towerTileList.push(tile);
+                }
                 row.appendChild(tile);
             }
         }
@@ -431,6 +433,12 @@ class GameView {
         }
         this.updateProgressBar(modelInfo.baseHp);
         document.getElementById('waveHpValue').innerText = `${Math.trunc(modelInfo.totalWaveHp * 10) / 10}`
+
+        this.towerTileList.forEach((tile) => {tile.style.backgroundColor = "#888"});
+        for (let i = 0; i < modelInfo.activeTowerList.length; i++) {
+            let tileCoords = modelInfo.activeTowerList[i]; 
+            document.getElementById(`tile_${tileCoords.X}_${tileCoords.Y}`).style.backgroundColor = "#AAA";
+        }
     }
 
     // FIXME: hardcode alert
@@ -444,14 +452,34 @@ class GameView {
     }
 }
 
-class Controller {
-    // TODO:
+class GameController {
+    constructor (modelInfo) {
+        this.activeTowerList = modelInfo.activeTowerList; // храним ссылку на список в модели, так удобнее туда писать
+        for (let y = 0; y < modelInfo.mapData.map.length; y++) {
+            for (let x = 0; x < modelInfo.mapData.map[y].length; x++) {
+                if (modelInfo.mapData.map[y][x] == towerTile) {
+                    let tile = document.getElementById(`tile_${x}_${y}`);
+                    tile.addEventListener('click', () => {this.makeTowerActive(x, y);});
+                }
+            }
+        }
+    }
+
+    makeTowerActive(towerX, towerY) {
+        for (let activeTowerId = 0; activeTowerId < this.activeTowerList.length; activeTowerId++)
+            if (this.activeTowerList[activeTowerId].X == towerX && this.activeTowerList[activeTowerId].Y == towerY)
+                return
+        this.activeTowerList.push({X: towerX, Y: towerY});
+        if (this.activeTowerList.length > 2)
+            this.activeTowerList.shift();
+    }
 }
 
 class Game {
     constructor(mapData) {
         this.model = new GameModel(mapData);
         this.view = new GameView(this.model);
+        this.controller = new GameController(this.model);
         this.gameEnded = false;
     }
 

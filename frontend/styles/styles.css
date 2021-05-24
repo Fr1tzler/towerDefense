@@ -232,6 +232,7 @@ body {
 
 .towerTile {
     background-color: #888;
+    transition: all ease 0.2s;
 }
 
 .towerTile:hover {

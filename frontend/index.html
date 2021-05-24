@@ -15,9 +15,10 @@
 </head>
 
 <body>
-    <img src='images/pageBackground.jpg' class='backgroundImage' alt=''>
-    <div class='backgroundShadow'></div>
-    <div class='screenContainer' id='pregame' style='visibility: hidden;'>
+    <img src='images/mars-surface.jpg' class='backgroundImage' alt=''>
+    <div class='backgroundShadow' id="visualCrossContainer"></div>    
+    <script src='backgroundGenerator.js'></script>
+    <div class='screenContainer' id='pregame' style='visibility: visible;'>
         <div class='screen' id='preGameScreen'>
             <div class='gameScreenBar'>
                 <input type='text' class='usernameField' value='username'  id='usernameField'>
@@ -49,7 +50,7 @@
             </div>
         </div>
     </div>
-    <div class='screenContainer' id='game' style='visibility: visible;'>
+    <div class='screenContainer' id='game' style='visibility: hidden;'>
         <div class='gamePanelContainer'>
             <div class='infoPanel'>
                 <!-- PROGRESS BAR -->

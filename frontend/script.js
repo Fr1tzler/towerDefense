@@ -253,6 +253,10 @@ class GameModel {
         this.totalWaveHp = 0;
         this.laserRayList = [];
         this.selectedTowers = [];
+        this.selectedTowersChanged = false;
+        this.towerOnMerge = undefined;
+        this.deletedTowers = [];
+        this.addedTowers = [];
     }
 
     generateWave() {
@@ -288,15 +292,22 @@ class GameModel {
             this.activeEnemyList.push(this.enemyQueue.shift());
             this.lastMobSpawnTime = new Date();
         }
+        
+        if (this.selectedTowersChanged) {
+            if (this.selectedTowers.length == 2) {
+                if (this.selectedTowers[1].level > this.selectedTowers[0].level)
+                    this.selectedTowers.reverse();
+                this.towerOnMerge = new TowerModel(this.selectedTowers[0].position.X, this.selectedTowers[0].position.Y);
+                this.towerOnMerge.level = countNextLevel(this.selectedTowers[0].level, this.selectedTowers[1].level);
+                this.towerOnMerge.colorId = countColorOnAbsorb(this.selectedTowers[0].colorId, this.selectedTowers[1].colorId, colors.length);
+            }
+        }
+        
         this.totalWaveHp = 0;
         for (let i = 0; i < this.activeEnemyList.length; i++)
             this.totalWaveHp += this.activeEnemyList[i].healthPoints;
         for (let i = 0; i < this.enemyQueue.length; i++)
             this.totalWaveHp += this.enemyQueue[i].healthPoints;
-    }
-
-    mergeTowers(tower1, tower2) {
-        // TODO:
     }
 }
 
@@ -321,7 +332,9 @@ class TowerView {
     }
 
     update() {
-        this.self.style.transform = `rotate(${this.origin.currentRotation}deg)`
+        this.setTier(this.origin.level);
+        this.inner.style.backgroundColor = colors[this.origin.colorId];
+        this.self.style.transform = `rotate(${this.origin.currentRotation}deg)`;
     }
 }
 
@@ -398,7 +411,6 @@ class GameView {
         canvas.style.top = '10px';
         canvas.style.left = '10px';
         this.context = canvas.getContext('2d');
-        this.previousSelectedTowers = [];
     }
 
     update() {
@@ -414,6 +426,8 @@ class GameView {
         })
 
         this.origin.recentlyDeletedEnemy = [];
+        this.origin.deletedTowers.forEach((tower) => {this.towerList.delete(tower);});
+        this.origin.addedTowers.forEach((tower) => {this.towerList.set(tower, new TowerView(tower))});
         this.origin.towerList.forEach((tower) => { this.towerList.get(tower).update(); })
         this.laserRays.forEach((ray) => {ray.remove()});
         this.laserRays = [];
@@ -436,8 +450,7 @@ class GameView {
         this.origin.selectedTowers.forEach((tower) => {
             document.getElementById(`tile_${tower.position.X}_${tower.position.Y}`).style.backgroundColor = "#AAA";
         })
-        if (this.previousSelectedTowers == this.origin.selectedTowers) {}
-        else {
+        if (this.origin.selectedTowersChanged) {
             if (this.origin.selectedTowers.length == 2) {
                 let towerMin = this.origin.selectedTowers[0];
                 let towerMax = this.origin.selectedTowers[1];
@@ -453,25 +466,44 @@ class GameView {
             } else {
                 this.clearTowerInfo();
             }
+
+            if (this.origin.towerOnMerge) {
+                this.renderTowerInTowerInfo(this.origin.towerOnMerge, 3);
+            }
+
+            this.origin.selectedTowersChanged = false
         }
     }
 
     renderTowerInTowerInfo(tower, id) {
         let towerImageContainer = document.getElementById(`towerInfoImage${id}`);
-        let towerDataContainer = document.getElementById(`towerInfoData${id}`);
         towerImageContainer.innerHTML = '';
-        towerDataContainer.innerHTML = '';
         let towerImage = document.createElement('div');
         towerImage.className = 'tower';
         let towerImageInner = document.createElement('div');
         towerImageInner.className = 'towerInner';
         towerImageContainer.appendChild(towerImage);
+
         towerImage.style.clipPath = towerTierClipPath[Math.trunc(tower.level)];
+        towerImage.style.top = "50%";
+        towerImage.style.left = '50%';
+        towerImage.style.transform = "translate(-50%, -50%)";
+        let towerSize = Math.trunc(Math.min(towerImageContainer.offsetHeight, towerImageContainer.offsetWidth) * 0.75);
+        towerImage.style.width = `${towerSize}px`;
+        towerImage.style.height = `${towerSize}px`;
         towerImage.style.position = 'absolute';
+        
         towerImage.appendChild(towerImageInner);
         towerImageInner.style.clipPath = towerTierClipPath[Math.trunc(tower.level)];
         towerImageInner.style.backgroundColor = colors[tower.colorId];
         towerImageInner.style.position = 'absolute';
+
+        let towerDataContainer = document.getElementById(`towerInfoData${id}`);
+        towerDataContainer.innerHTML = '';
+        let towerData = document.createElement('div');
+        towerDataContainer.appendChild(towerData);
+        towerData.style.position = 'absolute';
+        towerData.innerHTML = `level: ${Math.trunc(tower.level * 10) / 10}<br>damage: ${Math.trunc(tower.getDamage())}`;
     }
 
     clearTowerInfo() {
@@ -505,6 +537,17 @@ class GameController {
                 }
             }
         }
+        let mergeButton = document.getElementById('towerMergeButton');
+        mergeButton.addEventListener('click', () => {this.mergeTowers()});
+    }
+
+    mergeTowers() {
+        console.log(this);
+        if (this.origin.selectedTowers.length != 2 || !(this.origin.towerOnMerge))
+            return;
+        console.log(this.origin.towerOnMerge);
+        let insertionIndex = this.origin.towerList.indexOf(this.origin.selectedTowers[0]);
+        this.origin.towerList[insertionIndex] = this.origin.towerOnMerge;
     }
 
     makeTowerActive(towerX, towerY) {
@@ -521,6 +564,7 @@ class GameController {
         }
         if (this.selectedTowers.length > 2)
             this.selectedTowers.shift();
+        this.origin.selectedTowersChanged = true;
     }
 }
 

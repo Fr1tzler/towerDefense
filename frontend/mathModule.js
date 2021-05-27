@@ -8,9 +8,9 @@ export function countNextLevel(absorberTowerLevel, eatedTowerLevel) {
     return absorberTowerLevel + eatedTowerLevel / absorberTowerLevel;
 }
 
-// TODO:
+// TODO: нынешняя версия функции работает не так, как должна.
 export function countColorOnAbsorb(absorberColorId, eatedColorId, colorCount) {
-    return 1;
+    return Math.trunc((absorberColorId + eatedColorId) / 2);
 }
 
 export function countDamageMultiplier(towerColorId, enemyColorId, colorCount) {

@@ -106,10 +106,10 @@ function drawMaps(mapList) {
 class TowerModel {
     constructor(mapX, mapY) {
         this.position = {
-            X: mapX, // TILE
-            Y: mapY, // TILE 
-            realX: mapX * tileLengthMultipier + tileLengthMultipier / 2, // CONVENTIONAL UNITS
-            realY: mapY * tileLengthMultipier + tileLengthMultipier / 2 // CONVENTIONAL UNITS
+            tileX: mapX, // TILE
+            tileY: mapY, // TILE 
+            X: mapX * tileLengthMultipier + tileLengthMultipier / 2, // CONVENTIONAL UNITS
+            Y: mapY * tileLengthMultipier + tileLengthMultipier / 2 // CONVENTIONAL UNITS
         }
         this.level = 1;
         this.currentRotation = 0; // DEGREES
@@ -137,10 +137,7 @@ class TowerModel {
         if (Math.abs(remainingRotation) < this.confidenceRange) {
             this.currentTarget.receiveDamage(countDamageMultiplier(this.colorId, this.currentTarget.color, colors.length));
             laserRayList.push({
-                from: {
-                    X: this.position.realX,
-                    Y: this.position.realY
-                },
+                from: this.position,
                 to: this.currentTarget.position,
                 colorId: this.colorId
             });
@@ -155,8 +152,8 @@ class TowerModel {
         let deltaY = 0;
         for (let i = 0; i < enemyList.length; i++) {
             let currentEnemy = enemyList[i];
-            let dx = currentEnemy.position.X - this.position.realX;
-            let dy = currentEnemy.position.Y - this.position.realY;
+            let dx = currentEnemy.position.X - this.position.X;
+            let dy = currentEnemy.position.Y - this.position.Y;
             let currentDistance = Math.hypot(dx, dy);
             if (currentDistance < towerDistanceArea) {
                 selectedEnemy = currentEnemy
@@ -243,35 +240,35 @@ class GameModel {
         this.mapData = mapData;
         this.enemyQueue = [];
         this.activeEnemyList = [];
-        this.towerList = [];
+        this.towerMap = new Map();
         this.lastMobSpawnTime = new Date();
         this.lastGroupSpawnTime = new Date();
         this.recentlyDeletedEnemy = [];
         for (let y = 0; y < mapData.map.length; y++)
             for (let x = 0; x < mapData.map[y].length; x++)
                 if (mapData.map[y][x] == towerTile)
-                    this.towerList.push(new TowerModel(x, y));
+                    this.towerMap.set(x * 10 + y, new TowerModel(x, y));
         this.totalWaveHp = 0;
         this.laserRayList = [];
         this.selectedTowers = [];
-        this.selectedTowersChanged = false;
         this.towerOnMerge = undefined;
-        this.deletedTowers = [];
-        this.addedTowers = [];
+        this.fuck = true;
     }
 
     generateWave() {
-        let enemyColor = getRandomInt(0, colors.length);
+        let enemyWaveColor = getRandomInt(0, colors.length);
         for (let i = 0; i < 3 + Math.trunc(this.currentWave / 2); i++)
-            this.enemyQueue.push(new EnemyModel(this.mapData.waypoints, enemyColor));
+            this.enemyQueue.push(new EnemyModel(this.mapData.waypoints, enemyWaveColor));
     }
 
     update(deltaTime) {
         this.laserRayList = [];
         this.activeEnemyList.forEach(enemy => enemy.update(deltaTime));
-        this.towerList.forEach(tower => tower.selectEnemy(this.activeEnemyList));
-        this.towerList.forEach(tower => tower.update(deltaTime, this.laserRayList));
-        let newMobList = [];
+        this.towerMap.forEach((tower, coords, map) => tower.selectEnemy(this.activeEnemyList));
+        this.towerMap.forEach((tower, coords, map) => tower.update(deltaTime, this.laserRayList));
+        
+        // update enemyList by removing dead enemies and those, who reached base
+        let updatedEnemyList = [];
         this.activeEnemyList.forEach((enemy) => {
             if (!enemy.isAlive) {
                 this.recentlyDeletedEnemy.push(enemy);
@@ -280,10 +277,12 @@ class GameModel {
                 this.recentlyDeletedEnemy.push(enemy);
                 this.baseHp--;
             } else {
-                newMobList.push(enemy);
+                updatedEnemyList.push(enemy);
             }
         })
-        this.activeEnemyList = newMobList;
+        this.activeEnemyList = updatedEnemyList;
+        
+        // generating new wave, if needed
         if (this.enemyQueue.length == 0 && this.activeEnemyList.length == 0 && (new Date() - this.lastGroupSpawnTime > groupSpawnInterval)) {
             this.generateWave();
             this.currentWave++;
@@ -294,21 +293,56 @@ class GameModel {
             this.lastMobSpawnTime = new Date();
         }
         
-        if (this.selectedTowersChanged) {
-            if (this.selectedTowers.length == 2) {
-                if (this.selectedTowers[1].level > this.selectedTowers[0].level)
-                    this.selectedTowers.reverse();
-                this.towerOnMerge = new TowerModel(this.selectedTowers[0].position.X, this.selectedTowers[0].position.Y);
-                this.towerOnMerge.level = countNextLevel(this.selectedTowers[0].level, this.selectedTowers[1].level);
-                this.towerOnMerge.colorId = countColorOnAbsorb(this.selectedTowers[0].colorId, this.selectedTowers[1].colorId, colors.length);
-            }
-        }
-        
+        // calculating waveHP, might be useful
         this.totalWaveHp = 0;
         for (let i = 0; i < this.activeEnemyList.length; i++)
             this.totalWaveHp += this.activeEnemyList[i].healthPoints;
         for (let i = 0; i < this.enemyQueue.length; i++)
             this.totalWaveHp += this.enemyQueue[i].healthPoints;
+        if (this.selectedTowers.length == 2) {
+            this.towerOnMerge = this.getTowerOnMerge();
+        }
+    }
+
+    mergeTowers() {
+        if (this.selectedTowers.length != 2)
+            return;
+        let firstKey = this.selectedTowers[0][0] * 10 + this.selectedTowers[0][1];
+        let secondKey = this.selectedTowers[1][0] * 10 + this.selectedTowers[1][1];
+        let towers = [this.towerMap.get(firstKey), this.towerMap.get(secondKey)];
+        let minLevelTower = towers[0];
+        let maxLevelTower = towers[1];
+        if (minLevelTower.level > maxLevelTower.level) {
+            minLevelTower = towers[1];
+            maxLevelTower = towers[0];
+            let temp = firstKey;
+            firstKey = secondKey;
+            secondKey = temp;
+        }
+        this.towerMap.delete(firstKey);
+        this.towerMap.set(firstKey, new TowerModel(minLevelTower.position.tileX, minLevelTower.position.tileY));
+        this.towerMap.delete(secondKey);
+        this.towerMap.set(secondKey, this.towerOnMerge);
+    }
+
+    getTowerOnMerge() {
+        let firstKey = this.selectedTowers[0][0] * 10 + this.selectedTowers[0][1];
+        let secondKey = this.selectedTowers[1][0] * 10 + this.selectedTowers[1][1];
+        let towers = [this.towerMap.get(firstKey), this.towerMap.get(secondKey)];
+        let minLevelTower = towers[0];
+        let maxLevelTower = towers[1];
+        if (minLevelTower.level > maxLevelTower.level) {
+            minLevelTower = towers[1];
+            maxLevelTower = towers[0];
+            let temp = firstKey;
+            firstKey = secondKey;
+            secondKey = temp;
+        }
+        let maxTowerPosition = [maxLevelTower.position.tileX, maxLevelTower.position.tileY];
+        let newTower = new TowerModel(maxTowerPosition[0], maxTowerPosition[1]);
+        newTower.level = countNextLevel(maxLevelTower.level, minLevelTower.level);
+        newTower.colorId = countColorOnAbsorb(maxLevelTower.colorId, minLevelTower.colorId, colors.length);
+        return newTower;
     }
 }
 
@@ -324,7 +358,7 @@ class GameView {
             for (let tileX = 0; tileX < 10; tileX++) {
                 let tile = document.createElement('div');
                 tile.className = 'tile ';
-                tile.className += tileToClassDictionary[modelInfo.mapData.map[tileY][tileX]];
+                tile.className += this.tileToClassDictionary[modelInfo.mapData.map[tileY][tileX]];
                 tile.id = `tile_${tileX}_${tileY}`;
                 row.appendChild(tile);
             }
@@ -336,7 +370,7 @@ class GameView {
         canvas.style.top = '10px';
         canvas.style.left = '10px';
         this.context = canvas.getContext('2d');
-        this.context.lineWidth = 2;
+        this.context.lineWidth = 3;
     }
 
     update() {
@@ -354,7 +388,7 @@ class GameView {
         });
 
         // drawing towers
-        this.origin.towerList.forEach((tower) => {
+        this.origin.towerMap.forEach((tower, coords, map) => {
             this.drawTowerOnCanvas(tower);
         })
             
@@ -374,8 +408,8 @@ class GameView {
     }
 
     drawTowerOnCanvas(tower) {
-        let towerLevel = Math.trunc(tower.level);
-        let pathBeginPoint = this.transformModelToCanvasCoords({X: tower.position.realX, Y: tower.position.realY});
+        let towerLevel = Math.min(Math.trunc(tower.level), 8);
+        let pathBeginPoint = this.transformModelToCanvasCoords(tower.position);
         let pathCoords = this.transformPath(towerTierPath[towerLevel], tower.currentRotation * Math.PI / 180, true);
         this.context.beginPath();
         this.context.moveTo(pathBeginPoint.X + pathCoords[0][0], pathBeginPoint.Y + pathCoords[0][1]);
@@ -422,12 +456,49 @@ class GameView {
         document.getElementById('progressBarText').innerText = `${baseHp}/100`
         document.getElementById('progressBarLine').style.right = `${100 - baseHp}%`;
     }
+
+
+    tileToClassDictionary = {
+        'e': 'emptyTile',
+        'r': 'roadTile',
+        't': 'towerTile',
+        's': 'spawnTile',
+        'b': 'baseTile'
+    }
+}
+
+class GameController {
+    constructor(modelInfo) {
+        this.origin = modelInfo;
+        let tileMap = modelInfo.mapData.map;
+        for (let y = 0; y < tileMap.length; y++) {
+            for (let x = 0; x < tileMap[y].length; x++) {
+                if (tileMap[y][x] == towerTile)
+                    document.getElementById(`tile_${x}_${y}`).addEventListener('click', () => {this.selectTower(x, y)})
+            }
+        }
+        document.getElementById('towerMergeButton').addEventListener('click', () => {this.origin.mergeTowers()});
+    }
+
+    selectTower(x, y) {
+        let activeTowers = this.origin.selectedTowers;
+        for (let i = 0; i < activeTowers.length; i++) 
+            if (activeTowers[i][0] == x && activeTowers[i][1] == y)
+                return;
+        if (activeTowers.length == 2) {
+            document.getElementById(`tile_${activeTowers[0][0]}_${activeTowers[0][1]}`).style.backgroundColor = '#888';
+            activeTowers.shift();
+        }
+        activeTowers.push([x, y]);
+        document.getElementById(`tile_${x}_${y}`).style.backgroundColor = '#ccc';
+    }
 }
 
 class Game {
     constructor(mapData) {
         this.model = new GameModel(mapData);
         this.view = new GameView(this.model);
+        this.controller = new GameController(this.model);
         this.gameEnded = false;
     }
 
@@ -438,14 +509,6 @@ class Game {
         this.view.update();
         this.gameEnded = !(this.model.baseHp > 0);
     }
-}
-
-const tileToClassDictionary = {
-    'e': 'emptyTile',
-    'r': 'roadTile',
-    't': 'towerTile',
-    's': 'spawnTile',
-    'b': 'baseTile'
 }
 
 const tempMap = {

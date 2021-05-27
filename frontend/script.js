@@ -1,5 +1,5 @@
 // FIXME: при переключении на другую вкладку всё ломается
-import { towerTierPath } from './geometry.js';
+import { towerTierPath, enemyTierPath } from './geometry.js';
 import { getRandomInt, countNextLevel, countColorOnAbsorb, countDamageMultiplier, calculateSegmentAngle } from './mathModule.js';
 
 let mapPage = 0;
@@ -190,6 +190,7 @@ class EnemyModel {
         this.speed = 1 / 5; // CONVENTIONAL UNITS / MILLIS
         this.reachedBase = false;
         this.currentRotation = 0;
+        this.level = 1;
     }
 
     receiveDamage(incomingDamage) {
@@ -335,6 +336,7 @@ class GameView {
         canvas.style.top = '10px';
         canvas.style.left = '10px';
         this.context = canvas.getContext('2d');
+        this.context.lineWidth = 2;
     }
 
     update() {
@@ -344,7 +346,6 @@ class GameView {
             let lineFrom = this.transformModelToCanvasCoords(currentRay.from, true);
             let lineTo = this.transformModelToCanvasCoords(currentRay.to, false);
             this.context.strokeStyle = colors[currentRay.colorId];
-            this.context.lineWidth = 3;
             this.context.beginPath();
             this.context.moveTo(lineFrom.X, lineFrom.Y);
             this.context.lineTo(lineTo.X, lineTo.Y);
@@ -354,24 +355,12 @@ class GameView {
 
         // drawing towers
         this.origin.towerList.forEach((tower) => {
-            let towerLevel = Math.trunc(tower.level) + 5;
-            let pathBeginPoint = this.transformModelToCanvasCoords({X: tower.position.realX, Y: tower.position.realY});
-            let pathCoords = this.transformTowerPath(towerTierPath[towerLevel], tower.currentRotation * Math.PI / 180);
-            this.context.beginPath();
-            this.context.moveTo(pathBeginPoint.X + pathCoords[0][0], pathBeginPoint.Y + pathCoords[0][1]);
-            for (let i = 0; i < pathCoords.length; i++) {
-                this.context.lineTo(pathBeginPoint.X + pathCoords[i][0], pathBeginPoint.Y + pathCoords[i][1]);
-            }
-            this.context.closePath();
-            this.context.fillStyle = colors[tower.colorId];
-            this.context.strokeStyle = '#000';
-            this.context.fill();
-            this.context.stroke();
+            this.drawTowerOnCanvas(tower);
         })
             
         // drawing enemies
         this.origin.activeEnemyList.forEach((enemy) => {
-
+            this.drawEnemyOnCanvas(enemy);
         })
 
         // other view changes
@@ -384,12 +373,44 @@ class GameView {
         return { X: coords.X * 0.8, Y: coords.Y * 0.8 };
     }
 
-    transformTowerPath(towerPath, angle) {
-        let result = []
+    drawTowerOnCanvas(tower) {
+        let towerLevel = Math.trunc(tower.level);
+        let pathBeginPoint = this.transformModelToCanvasCoords({X: tower.position.realX, Y: tower.position.realY});
+        let pathCoords = this.transformPath(towerTierPath[towerLevel], tower.currentRotation * Math.PI / 180, true);
+        this.context.beginPath();
+        this.context.moveTo(pathBeginPoint.X + pathCoords[0][0], pathBeginPoint.Y + pathCoords[0][1]);
+        for (let i = 0; i < pathCoords.length; i++) {
+            this.context.lineTo(pathBeginPoint.X + pathCoords[i][0], pathBeginPoint.Y + pathCoords[i][1]);
+        }
+        this.context.closePath();
+        this.context.fillStyle = colors[tower.colorId];
+        this.context.strokeStyle = '#000';
+        this.context.fill();
+        this.context.stroke();
+    }
+
+    drawEnemyOnCanvas(enemy) {
+        let pathBeginPoint = this.transformModelToCanvasCoords(enemy.position);
+        let pathCoords = this.transformPath(enemyTierPath[enemy.level], enemy.currentRotation * Math.PI / 180, false);
+        this.context.beginPath();
+        this.context.moveTo(pathBeginPoint.X + pathCoords[0][0], pathBeginPoint.Y + pathCoords[0][1]);
+        for (let i = 0; i < pathCoords.length; i++) {
+            this.context.lineTo(pathBeginPoint.X + pathCoords[i][0], pathBeginPoint.Y + pathCoords[i][1]);
+        }
+        this.context.closePath();
+        this.context.fillStyle = colors[enemy.colorId];
+        this.context.strokeStyle = '#000';
+        this.context.fill();
+        this.context.stroke();
+    }
+
+    transformPath(towerPath, angle, isTower) {
+        let multiplier = isTower ? 0.8 : 0.5;
+        let result = [];
         for (let i = 0; i < towerPath.length; i++) {
             result.push([]);
-            let x = (towerPath[i][0] - 50) * 0.8;
-            let y = (towerPath[i][1] - 50) * 0.8;
+            let x = (towerPath[i][0] - 50) * multiplier;
+            let y = (towerPath[i][1] - 50) * multiplier;
             result[i].push(x * Math.cos(angle) - y * Math.sin(angle));
             result[i].push(x * Math.sin(angle) + y * Math.cos(angle));
         }

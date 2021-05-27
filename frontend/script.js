@@ -135,7 +135,7 @@ class TowerModel {
         if (Math.abs(remainingRotation) > 180)
             remainingRotation -= Math.sign(remainingRotation) * 360;
         if (Math.abs(remainingRotation) < this.confidenceRange) {
-            this.currentTarget.receiveDamage(countDamageMultiplier(this.colorId, this.currentTarget.color, colors.length));
+            this.currentTarget.receiveDamage(countDamageMultiplier(this.colorId, this.currentTarget.colorId, colors.length));
             laserRayList.push({
                 from: this.position,
                 to: this.currentTarget.position,
@@ -170,9 +170,9 @@ class TowerModel {
 }
 
 class EnemyModel {
-    constructor(waypoints, color) {
+    constructor(waypoints, colorId) {
         this.healthPoints = 300; // TODO: балансные правки
-        this.color = color;
+        this.colorId = colorId;
         this.isAlive = true;
         this.waypoints = [];
         waypoints.forEach(waypoint => {
@@ -224,7 +224,6 @@ class EnemyModel {
             this.nextWaypoint++;
             if (this.nextWaypoint == this.waypoints.length) {
                 this.reachedBase = true;
-                this.color = 2;
             } else {
                 this.targetPosition = this.waypoints[this.nextWaypoint];
             }
@@ -251,8 +250,14 @@ class GameModel {
         this.totalWaveHp = 0;
         this.laserRayList = [];
         this.selectedTowers = [];
-        this.towerOnMerge = undefined;
-        this.fuck = true;
+        this.towerOnMerge = undefined;        
+    }
+
+    calculateBaseLocation() {
+        for (let tileY = 0; tileY < 10; tileY++) 
+            for (let tileX = 0; tileX < 10; tileX++) 
+                if (this.mapData.map[tileY][tileX] == 'b')
+                    return [tileX, tileY];
     }
 
     generateWave() {
@@ -371,6 +376,11 @@ class GameView {
         canvas.style.left = '10px';
         this.context = canvas.getContext('2d');
         this.context.lineWidth = 3;
+
+        // adding baseHp progressbar on field
+        this.baseLocation = modelInfo.calculateBaseLocation();
+        let baseTile = document.getElementById(`tile_${this.baseLocation[0]}_${this.baseLocation[1]}`);
+        this.progressBarRadius = Math.trunc(baseTile.scrollHeight * 0.8 / 2);
     }
 
     update() {
@@ -396,13 +406,12 @@ class GameView {
         this.origin.activeEnemyList.forEach((enemy) => {
             this.drawEnemyOnCanvas(enemy);
         })
-
         // other view changes
-        this.updateProgressBar();
-        document.getElementById('waveHpValue').innerText = `${Math.trunc(this.origin.totalWaveHp * 10) / 10}`
+        document.getElementById('waveHpValue').innerText = `${Math.trunc(this.origin.totalWaveHp * 10) / 10}`;
+        this.drawBaseHP();
     }
 
-    // FIXME: hardcode alert
+    // hardcode alert
     transformModelToCanvasCoords(coords) {
         return { X: coords.X * 0.8, Y: coords.Y * 0.8 };
     }
@@ -412,12 +421,12 @@ class GameView {
         let pathBeginPoint = this.transformModelToCanvasCoords(tower.position);
         let pathCoords = this.transformPath(towerTierPath[towerLevel], tower.currentRotation * Math.PI / 180, true);
         this.context.beginPath();
+        this.context.fillStyle = colors[tower.colorId];
         this.context.moveTo(pathBeginPoint.X + pathCoords[0][0], pathBeginPoint.Y + pathCoords[0][1]);
         for (let i = 0; i < pathCoords.length; i++) {
             this.context.lineTo(pathBeginPoint.X + pathCoords[i][0], pathBeginPoint.Y + pathCoords[i][1]);
         }
         this.context.closePath();
-        this.context.fillStyle = colors[tower.colorId];
         this.context.strokeStyle = '#000';
         this.context.fill();
         this.context.stroke();
@@ -427,15 +436,31 @@ class GameView {
         let pathBeginPoint = this.transformModelToCanvasCoords(enemy.position);
         let pathCoords = this.transformPath(enemyTierPath[enemy.level], enemy.currentRotation * Math.PI / 180, false);
         this.context.beginPath();
+        this.context.fillStyle = colors[enemy.colorId];
         this.context.moveTo(pathBeginPoint.X + pathCoords[0][0], pathBeginPoint.Y + pathCoords[0][1]);
         for (let i = 0; i < pathCoords.length; i++) {
             this.context.lineTo(pathBeginPoint.X + pathCoords[i][0], pathBeginPoint.Y + pathCoords[i][1]);
         }
         this.context.closePath();
-        this.context.fillStyle = colors[enemy.colorId];
         this.context.strokeStyle = '#000';
         this.context.fill();
         this.context.stroke();
+    }
+
+    drawBaseHP() {
+        let calculatedLocation = { X: (this.baseLocation[0] + 0.5) * 80, Y: (this.baseLocation[1] + 0.5) * 80};
+        this.context.beginPath();
+        this.context.fillStyle = 'white';
+        this.context.strokeStyle = 'white';
+        this.context.lineWidth = 5;
+        this.context.arc(calculatedLocation.X, calculatedLocation.Y, this.progressBarRadius, - Math.PI / 2, - Math.PI / 2 - (2 * Math.PI * this.origin.baseHp / 100), true);
+        this.context.font = "20pt Gardens CM";
+        let text = `${this.origin.baseHp}`;
+        let smallShift = text.length == 2 ? 5 : 0;
+        this.context.fillText(text, calculatedLocation.X - 20 + smallShift, calculatedLocation.Y + 8);        
+        this.context.stroke();
+        this.context.lineWidth = 3;
+        this.context.strokeStyle = 'black';
     }
 
     transformPath(towerPath, angle, isTower) {
@@ -449,12 +474,6 @@ class GameView {
             result[i].push(x * Math.sin(angle) + y * Math.cos(angle));
         }
         return result;
-    }
-
-    updateProgressBar() {
-        let baseHp = this.origin.baseHp;
-        document.getElementById('progressBarText').innerText = `${baseHp}/100`
-        document.getElementById('progressBarLine').style.right = `${100 - baseHp}%`;
     }
 
 

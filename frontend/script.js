@@ -1,5 +1,5 @@
 // FIXME: при переключении на другую вкладку всё ломается
-import { towerTierClipPath, enemyTierClipPath } from './geometry.js';
+import { towerTierPath } from './geometry.js';
 import { getRandomInt, countNextLevel, countColorOnAbsorb, countDamageMultiplier, calculateSegmentAngle } from './mathModule.js';
 
 let mapPage = 0;
@@ -311,80 +311,11 @@ class GameModel {
     }
 }
 
-class TowerView {
-    constructor(tower) {
-        this.origin = tower;
-        this.self = document.createElement('div');
-        this.inner = document.createElement('div');
-        this.self.className = 'tower';
-        this.inner.className = 'towerInner';
-        this.self.style.clipPath = towerTierClipPath[1];
-        this.inner.style.clipPath = towerTierClipPath[1];
-        this.inner.style.backgroundColor = colors[tower.colorId];
-        document.getElementById(`tile_${tower.position.X}_${tower.position.Y}`).appendChild(this.self);
-        this.self.appendChild(this.inner);
-    }
-
-    setTier(tier) {
-        let truncatedTier = Math.trunc(tier);
-        this.self.style.clipPath = towerTierClipPath[truncatedTier];
-        this.inner.style.clipPath = towerTierClipPath[truncatedTier];
-    }
-
-    update() {
-        this.setTier(this.origin.level);
-        this.inner.style.backgroundColor = colors[this.origin.colorId];
-        this.self.style.transform = `rotate(${this.origin.currentRotation}deg)`;
-    }
-}
-
-class EnemyView {
-    constructor(enemyModel) {
-        this.origin = enemyModel;
-        this.self = document.createElement('div');
-        this.inner = document.createElement('div');
-        this.self.className = 'enemy';
-        this.inner.className = 'enemyInner';
-        this.self.style.clipPath = enemyTierClipPath[8];
-        this.inner.style.clipPath = enemyTierClipPath[8];
-        this.inner.style.backgroundColor = colors[enemyModel.color];
-        let tileScreen = document.getElementById('tileScreen');
-        this.mapSize = { X: 800, Y: 800 };
-        this.paddingSize = 10;
-        let truePosition = this.transformPosition(enemyModel.position, this.mapSize, this.paddingSize);
-        tileScreen.appendChild(this.self);
-        this.self.appendChild(this.inner);
-        this.self.style.left = `${truePosition.X}px`;
-        this.self.style.top = `${truePosition.Y}px`;
-    }
-
-    update() {
-        let truePosition = this.transformPosition(this.origin.position, this.mapSize, this.paddingSize);
-        this.self.style.left = `${truePosition.X}px`;
-        this.self.style.top = `${truePosition.Y}px`;
-        this.self.style.transform = 'translate(-50%, -50%)';
-        this.self.style.transform += `rotate(${this.origin.currentRotation}deg`;
-    }
-
-    transformPosition(modelPosition, mapSize, padding) {
-        return {
-            X: modelPosition.X * mapSize.X / 1000 + padding,
-            Y: modelPosition.Y * mapSize.Y / 1000 + padding
-        };
-    }
-
-    remove() {
-        this.self.remove();
-    }
-}
-
 class GameView {
     constructor(modelInfo) {
         this.origin = modelInfo;
-        // tile generation
         let tileScreen = document.getElementById('tileScreen');
-        this.towerTileList = [];
-        let mapInfo = modelInfo.mapData;
+        
         for (let tileY = 0; tileY < 10; tileY++) {
             let row = document.createElement('div');
             row.className = 'tileRow';
@@ -392,19 +323,12 @@ class GameView {
             for (let tileX = 0; tileX < 10; tileX++) {
                 let tile = document.createElement('div');
                 tile.className = 'tile ';
-                tile.className += tileToClassDictionary[mapInfo.map[tileY][tileX]];
+                tile.className += tileToClassDictionary[modelInfo.mapData.map[tileY][tileX]];
                 tile.id = `tile_${tileX}_${tileY}`;
-                if (mapInfo.map[tileY][tileX] == towerTile)
-                    this.towerTileList.push(tile);
                 row.appendChild(tile);
             }
         }
-        this.towerList = new Map();
-        modelInfo.towerList.forEach((tower) => {
-            this.towerList.set(tower, new TowerView(tower));
-        })
-        this.enemyList = new Map();
-        this.laserRays = [];
+        
         let canvas = document.getElementById('laserRayLayer');
         canvas.style.width = '800px';
         canvas.style.height = '800px';
@@ -414,24 +338,8 @@ class GameView {
     }
 
     update() {
-        this.origin.activeEnemyList.forEach((enemy) => {
-            if (this.enemyList.get(enemy))
-                this.enemyList.get(enemy).update();
-            else
-                this.enemyList.set(enemy, new EnemyView(enemy));
-        })
-        this.origin.recentlyDeletedEnemy.forEach((enemy) => {
-            this.enemyList.get(enemy).remove();
-            this.enemyList.delete(enemy);
-        })
-
-        this.origin.recentlyDeletedEnemy = [];
-        this.origin.deletedTowers.forEach((tower) => {this.towerList.delete(tower);});
-        this.origin.addedTowers.forEach((tower) => {this.towerList.set(tower, new TowerView(tower))});
-        this.origin.towerList.forEach((tower) => { this.towerList.get(tower).update(); })
-        this.laserRays.forEach((ray) => {ray.remove()});
-        this.laserRays = [];
         this.context.clearRect(0, 0, 800, 800);
+        // drawing laser rays
         this.origin.laserRayList.forEach((currentRay) => {
             let lineFrom = this.transformModelToCanvasCoords(currentRay.from, true);
             let lineTo = this.transformModelToCanvasCoords(currentRay.to, false);
@@ -442,80 +350,50 @@ class GameView {
             this.context.lineTo(lineTo.X, lineTo.Y);
             this.context.closePath();
             this.context.stroke();
+        });
+
+        // drawing towers
+        this.origin.towerList.forEach((tower) => {
+            let towerLevel = Math.trunc(tower.level) + 5;
+            let pathBeginPoint = this.transformModelToCanvasCoords({X: tower.position.realX, Y: tower.position.realY});
+            let pathCoords = this.transformTowerPath(towerTierPath[towerLevel], tower.currentRotation * Math.PI / 180);
+            this.context.beginPath();
+            this.context.moveTo(pathBeginPoint.X + pathCoords[0][0], pathBeginPoint.Y + pathCoords[0][1]);
+            for (let i = 0; i < pathCoords.length; i++) {
+                this.context.lineTo(pathBeginPoint.X + pathCoords[i][0], pathBeginPoint.Y + pathCoords[i][1]);
+            }
+            this.context.closePath();
+            this.context.fillStyle = colors[tower.colorId];
+            this.context.strokeStyle = '#000';
+            this.context.fill();
+            this.context.stroke();
         })
+            
+        // drawing enemies
+        this.origin.activeEnemyList.forEach((enemy) => {
+
+        })
+
+        // other view changes
         this.updateProgressBar();
         document.getElementById('waveHpValue').innerText = `${Math.trunc(this.origin.totalWaveHp * 10) / 10}`
-
-        this.towerTileList.forEach((tile) => {tile.style.backgroundColor = "#888"});
-        this.origin.selectedTowers.forEach((tower) => {
-            document.getElementById(`tile_${tower.position.X}_${tower.position.Y}`).style.backgroundColor = "#AAA";
-        })
-        if (this.origin.selectedTowersChanged) {
-            if (this.origin.selectedTowers.length == 2) {
-                let towerMin = this.origin.selectedTowers[0];
-                let towerMax = this.origin.selectedTowers[1];
-                if (towerMin.level > towerMax.level) {
-                    let temp = towerMin;
-                    towerMin = towerMax;
-                    towerMax = temp;
-                }
-                this.renderTowerInTowerInfo(towerMax, 1);
-                this.renderTowerInTowerInfo(towerMin, 2);
-            } else if (this.origin.selectedTowers.length == 1) {
-                this.renderTowerInTowerInfo(this.origin.selectedTowers[0], 1);
-            } else {
-                this.clearTowerInfo();
-            }
-
-            if (this.origin.towerOnMerge) {
-                this.renderTowerInTowerInfo(this.origin.towerOnMerge, 3);
-            }
-
-            this.origin.selectedTowersChanged = false
-        }
-    }
-
-    renderTowerInTowerInfo(tower, id) {
-        let towerImageContainer = document.getElementById(`towerInfoImage${id}`);
-        towerImageContainer.innerHTML = '';
-        let towerImage = document.createElement('div');
-        towerImage.className = 'tower';
-        let towerImageInner = document.createElement('div');
-        towerImageInner.className = 'towerInner';
-        towerImageContainer.appendChild(towerImage);
-
-        towerImage.style.clipPath = towerTierClipPath[Math.trunc(tower.level)];
-        towerImage.style.top = "50%";
-        towerImage.style.left = '50%';
-        towerImage.style.transform = "translate(-50%, -50%)";
-        let towerSize = Math.trunc(Math.min(towerImageContainer.offsetHeight, towerImageContainer.offsetWidth) * 0.75);
-        towerImage.style.width = `${towerSize}px`;
-        towerImage.style.height = `${towerSize}px`;
-        towerImage.style.position = 'absolute';
-        
-        towerImage.appendChild(towerImageInner);
-        towerImageInner.style.clipPath = towerTierClipPath[Math.trunc(tower.level)];
-        towerImageInner.style.backgroundColor = colors[tower.colorId];
-        towerImageInner.style.position = 'absolute';
-
-        let towerDataContainer = document.getElementById(`towerInfoData${id}`);
-        towerDataContainer.innerHTML = '';
-        let towerData = document.createElement('div');
-        towerDataContainer.appendChild(towerData);
-        towerData.style.position = 'absolute';
-        towerData.innerHTML = `level: ${Math.trunc(tower.level * 10) / 10}<br>damage: ${Math.trunc(tower.getDamage())}`;
-    }
-
-    clearTowerInfo() {
-        for (let id = 1; id <= 3; id++) {
-            document.getElementById(`towerInfoImage${id}`).innerHTML = '';
-            document.getElementById(`towerInfoData${id}`).innerHTML = '';
-        }
     }
 
     // FIXME: hardcode alert
     transformModelToCanvasCoords(coords) {
         return { X: coords.X * 0.8, Y: coords.Y * 0.8 };
+    }
+
+    transformTowerPath(towerPath, angle) {
+        let result = []
+        for (let i = 0; i < towerPath.length; i++) {
+            result.push([]);
+            let x = (towerPath[i][0] - 50) * 0.8;
+            let y = (towerPath[i][1] - 50) * 0.8;
+            result[i].push(x * Math.cos(angle) - y * Math.sin(angle));
+            result[i].push(x * Math.sin(angle) + y * Math.cos(angle));
+        }
+        return result;
     }
 
     updateProgressBar() {
@@ -525,54 +403,10 @@ class GameView {
     }
 }
 
-class GameController {
-    constructor (modelInfo) {
-        this.origin = modelInfo;
-        this.selectedTowers = modelInfo.selectedTowers; // храним ссылку на список в модели, так удобнее туда писать
-        for (let y = 0; y < modelInfo.mapData.map.length; y++) {
-            for (let x = 0; x < modelInfo.mapData.map[y].length; x++) {
-                if (modelInfo.mapData.map[y][x] == towerTile) {
-                    let tile = document.getElementById(`tile_${x}_${y}`);
-                    tile.addEventListener('click', () => {this.makeTowerActive(x, y);});
-                }
-            }
-        }
-        let mergeButton = document.getElementById('towerMergeButton');
-        mergeButton.addEventListener('click', () => {this.mergeTowers()});
-    }
-
-    mergeTowers() {
-        console.log(this);
-        if (this.origin.selectedTowers.length != 2 || !(this.origin.towerOnMerge))
-            return;
-        console.log(this.origin.towerOnMerge);
-        let insertionIndex = this.origin.towerList.indexOf(this.origin.selectedTowers[0]);
-        this.origin.towerList[insertionIndex] = this.origin.towerOnMerge;
-    }
-
-    makeTowerActive(towerX, towerY) {
-        for (let selectedTowerId = 0; selectedTowerId < this.selectedTowers.length; selectedTowerId++) {
-            let tower = this.selectedTowers[selectedTowerId];
-            if (tower.position.X == towerX && tower.position.Y == towerY)
-                return;
-        }
-        for (let towerId = 0; towerId < this.origin.towerList.length; towerId++) {
-            let tower = this.origin.towerList[towerId];
-            if (tower.position.X == towerX && tower.position.Y == towerY) {
-                this.selectedTowers.push(tower);
-            }
-        }
-        if (this.selectedTowers.length > 2)
-            this.selectedTowers.shift();
-        this.origin.selectedTowersChanged = true;
-    }
-}
-
 class Game {
     constructor(mapData) {
         this.model = new GameModel(mapData);
         this.view = new GameView(this.model);
-        this.controller = new GameController(this.model);
         this.gameEnded = false;
     }
 

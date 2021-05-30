@@ -250,12 +250,13 @@ class GameModel {
         this.totalWaveHp = 0;
         this.laserRayList = [];
         this.selectedTowers = [];
-        this.towerOnMerge = undefined;        
+        this.towerOnMerge = undefined;
+        this.earnedMoney = 0;
     }
 
     calculateBaseLocation() {
-        for (let tileY = 0; tileY < 10; tileY++) 
-            for (let tileX = 0; tileX < 10; tileX++) 
+        for (let tileY = 0; tileY < 10; tileY++)
+            for (let tileX = 0; tileX < 10; tileX++)
                 if (this.mapData.map[tileY][tileX] == 'b')
                     return [tileX, tileY];
     }
@@ -271,12 +272,13 @@ class GameModel {
         this.activeEnemyList.forEach(enemy => enemy.update(deltaTime));
         this.towerMap.forEach((tower, coords, map) => tower.selectEnemy(this.activeEnemyList));
         this.towerMap.forEach((tower, coords, map) => tower.update(deltaTime, this.laserRayList));
-        
+
         // update enemyList by removing dead enemies and those, who reached base
         let updatedEnemyList = [];
         this.activeEnemyList.forEach((enemy) => {
             if (!enemy.isAlive) {
                 this.recentlyDeletedEnemy.push(enemy);
+                this.earnedMoney += 1 * enemy.level;
             }
             else if (enemy.reachedBase) {
                 this.recentlyDeletedEnemy.push(enemy);
@@ -286,10 +288,11 @@ class GameModel {
             }
         })
         this.activeEnemyList = updatedEnemyList;
-        
+
         // generating new wave, if needed
         if (this.enemyQueue.length == 0 && this.activeEnemyList.length == 0 && (new Date() - this.lastGroupSpawnTime > groupSpawnInterval)) {
             this.generateWave();
+            this.earnedMoney += 10 * this.currentWave;
             this.currentWave++;
             this.lastGroupSpawnTime = new Date();
         }
@@ -297,7 +300,7 @@ class GameModel {
             this.activeEnemyList.push(this.enemyQueue.shift());
             this.lastMobSpawnTime = new Date();
         }
-        
+
         // calculating waveHP, might be useful
         this.totalWaveHp = 0;
         for (let i = 0; i < this.activeEnemyList.length; i++)
@@ -312,6 +315,10 @@ class GameModel {
     mergeTowers() {
         if (this.selectedTowers.length != 2)
             return;
+        let cost = Math.trunc(this.towerOnMerge.level * 10);
+        if (this.earnedMoney < cost)
+            return
+        this.earnedMoney -= cost;
         let firstKey = this.selectedTowers[0][0] * 10 + this.selectedTowers[0][1];
         let secondKey = this.selectedTowers[1][0] * 10 + this.selectedTowers[1][1];
         let towers = [this.towerMap.get(firstKey), this.towerMap.get(secondKey)];
@@ -355,7 +362,7 @@ class GameView {
     constructor(modelInfo) {
         this.origin = modelInfo;
         let tileScreen = document.getElementById('tileScreen');
-        
+
         for (let tileY = 0; tileY < 10; tileY++) {
             let row = document.createElement('div');
             row.className = 'tileRow';
@@ -368,7 +375,7 @@ class GameView {
                 row.appendChild(tile);
             }
         }
-        
+
         let canvas = document.getElementById('laserRayLayer');
         canvas.style.width = '800px';
         canvas.style.height = '800px';
@@ -401,7 +408,7 @@ class GameView {
         this.origin.towerMap.forEach((tower, coords, map) => {
             this.drawTowerOnCanvas(tower);
         })
-            
+
         // drawing enemies
         this.origin.activeEnemyList.forEach((enemy) => {
             this.drawEnemyOnCanvas(enemy);
@@ -448,7 +455,7 @@ class GameView {
     }
 
     drawBaseHP() {
-        let calculatedLocation = { X: (this.baseLocation[0] + 0.5) * 80, Y: (this.baseLocation[1] + 0.5) * 80};
+        let calculatedLocation = { X: (this.baseLocation[0] + 0.5) * 80, Y: (this.baseLocation[1] + 0.5) * 80 };
         this.context.beginPath();
         this.context.fillStyle = 'white';
         this.context.strokeStyle = 'white';
@@ -457,7 +464,7 @@ class GameView {
         this.context.font = "20pt Gardens CM";
         let text = `${this.origin.baseHp}`;
         let smallShift = text.length == 2 ? 5 : 0;
-        this.context.fillText(text, calculatedLocation.X - 20 + smallShift, calculatedLocation.Y + 8);        
+        this.context.fillText(text, calculatedLocation.X - 20 + smallShift, calculatedLocation.Y + 8);
         this.context.stroke();
         this.context.lineWidth = 3;
         this.context.strokeStyle = 'black';
@@ -493,15 +500,15 @@ class GameController {
         for (let y = 0; y < tileMap.length; y++) {
             for (let x = 0; x < tileMap[y].length; x++) {
                 if (tileMap[y][x] == towerTile)
-                    document.getElementById(`tile_${x}_${y}`).addEventListener('click', () => {this.selectTower(x, y)})
+                    document.getElementById(`tile_${x}_${y}`).addEventListener('click', () => { this.selectTower(x, y) })
             }
         }
-        document.getElementById('towerMergeButton').addEventListener('click', () => {this.origin.mergeTowers()});
+        document.getElementById('towerMergeButton').addEventListener('click', () => { this.origin.mergeTowers() });
     }
 
     selectTower(x, y) {
         let activeTowers = this.origin.selectedTowers;
-        for (let i = 0; i < activeTowers.length; i++) 
+        for (let i = 0; i < activeTowers.length; i++)
             if (activeTowers[i][0] == x && activeTowers[i][1] == y)
                 return;
         if (activeTowers.length == 2) {

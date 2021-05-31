@@ -1,21 +1,13 @@
-// FIXME: при переключении на другую вкладку всё ломается
 import { towerTierPath, enemyTierPath } from './geometry.js';
 import { getRandomInt, countNextLevel, countColorOnAbsorb, countDamageMultiplier, calculateSegmentAngle } from './mathModule.js';
+import * as Configs from './configs.js';
 
 let mapPage = 0;
 let username = 'username';
 let score = 0;
 let mapId = 0;
+let pageFocused = true;
 
-const mapSizePx = 800;
-const paddingSizePx = 10;
-
-const tileLengthMultipier = 100;
-const towerDistanceArea = 400;
-const fps = 50;
-const towerTile = 't';
-const mobSpawningInterval = 800; // mob spawn interval in milliseconds
-const groupSpawnInterval = 2000; // milliseconds between last mob killed and new group spawn
 const gameStages = [
     'pregame',
     'game',
@@ -32,29 +24,16 @@ function init() {
     document.getElementById('confirmUsername').addEventListener('click', saveUsernameInCookies);
 
     let game = new Game(tempMap);
-    let timer = setInterval(mainloop, 1000 / fps, game)
+    let timer = setInterval(mainloop, 1000 / Configs.fps, game);
+    document.addEventListener('focus', () => {pageFocused = true});
+    document.addEventListener('blur', () => {pageFocused = false});
 }
 
 function mainloop(game) {
     if (game.gameEnded)
         return;
-    game.update(1000 / fps);
+    game.update(1000 / Configs.fps);
 }
-
-const colors = [
-    '#FF3C00', // orangered
-    '#F79A00', // orange
-    '#F2C500', // orangeyellow
-    '#F0FF00', // yellow
-    '#BAFF00', // yellowgreen
-    '#4CBE2C', // green
-    '#2F77CF', // lightblue
-    '#5700FF', // blue
-    '#53009F', // violetblue
-    '#9000AD', // violet
-    '#A4003D', // cherry
-    '#FF0000', // red
-];
 
 function saveUsernameInCookies() {
     username = document.getElementById('usernameField').value;
@@ -108,8 +87,8 @@ class TowerModel {
         this.position = {
             tileX: mapX, // TILE
             tileY: mapY, // TILE 
-            X: mapX * tileLengthMultipier + tileLengthMultipier / 2, // CONVENTIONAL UNITS
-            Y: mapY * tileLengthMultipier + tileLengthMultipier / 2 // CONVENTIONAL UNITS
+            X: mapX * Configs.tileLengthMultipier + Configs.tileLengthMultipier / 2, // CONVENTIONAL UNITS
+            Y: mapY * Configs.tileLengthMultipier + Configs.tileLengthMultipier / 2 // CONVENTIONAL UNITS
         }
         this.level = 1;
         this.currentRotation = 0; // DEGREES
@@ -117,7 +96,7 @@ class TowerModel {
         this.rotationSpeed = 0.25; // DEGREES / MILLIS
         this.confidenceRange = 5; // DEGREES, TOWER WILL SHOOT AT ENEMY IF IT IS WHITHIN THIS RANGE IN DEGREES
         this.currentTarget = null; // ENEMY MODEL
-        this.colorId = getRandomInt(0, colors.length);
+        this.colorId = getRandomInt(0, Configs.colors.length);
     }
 
     calculateRawDamage() {
@@ -135,7 +114,7 @@ class TowerModel {
         if (Math.abs(remainingRotation) > 180)
             remainingRotation -= Math.sign(remainingRotation) * 360;
         if (Math.abs(remainingRotation) < this.confidenceRange) {
-            this.currentTarget.receiveDamage(countDamageMultiplier(this.colorId, this.currentTarget.colorId, colors.length));
+            this.currentTarget.receiveDamage(countDamageMultiplier(this.colorId, this.currentTarget.colorId, Configs.colors.length));
             laserRayList.push({
                 from: this.position,
                 to: this.currentTarget.position,
@@ -158,7 +137,7 @@ class TowerModel {
             let dx = currentEnemy.position.X - this.position.X;
             let dy = currentEnemy.position.Y - this.position.Y;
             let currentDistance = Math.hypot(dx, dy);
-            if (currentDistance < towerDistanceArea) {
+            if (currentDistance < Configs.towerDistanceArea) {
                 selectedEnemy = currentEnemy
                 deltaX = dx;
                 deltaY = dy;
@@ -181,8 +160,8 @@ class EnemyModel {
         this.waypoints = [];
         waypoints.forEach(waypoint => {
             this.waypoints.push({
-                X: waypoint.X * tileLengthMultipier + Math.trunc(tileLengthMultipier / 2),
-                Y: waypoint.Y * tileLengthMultipier + Math.trunc(tileLengthMultipier / 2)
+                X: waypoint.X * Configs.tileLengthMultipier + Math.trunc(Configs.tileLengthMultipier / 2),
+                Y: waypoint.Y * Configs.tileLengthMultipier + Math.trunc(Configs.tileLengthMultipier / 2)
             });
         })
         this.position = this.waypoints[0];
@@ -250,7 +229,7 @@ class GameModel {
         this.recentlyDeletedEnemy = [];
         for (let y = 0; y < mapData.map.length; y++)
             for (let x = 0; x < mapData.map[y].length; x++)
-                if (mapData.map[y][x] == towerTile)
+                if (mapData.map[y][x] == Configs.towerTile)
                     this.towerMap.set(x * 10 + y, new TowerModel(x, y));
         this.totalWaveHp = 0;
         this.laserRayList = [];
@@ -267,7 +246,7 @@ class GameModel {
     }
 
     generateWave() {
-        let enemyWaveColor = getRandomInt(0, colors.length);
+        let enemyWaveColor = getRandomInt(0, Configs.colors.length);
         let enemyLevel = Math.min(Math.trunc((this.currentWave + 2) / 4) + 1, 8);
         let enemyCount = Math.trunc(this.currentWave / 4) + 3;
         for (let i = 0; i < enemyCount; i++)
@@ -275,6 +254,11 @@ class GameModel {
     }
 
     update(deltaTime) {
+        if (!pageFocused) {
+            /* TODO: наблюдается баг со спавном моба, если очередь мобов не пуста, а игрок уходит на другую
+            вкладку, а то, что сделано сейчас - быстрофикс, но потом, при наличии времени, следует разобраться*/
+            return;
+        }
         this.laserRayList = [];
         this.activeEnemyList.forEach(enemy => enemy.update(deltaTime));
         this.towerMap.forEach((tower, coords, map) => tower.selectEnemy(this.activeEnemyList));
@@ -297,13 +281,13 @@ class GameModel {
         this.activeEnemyList = updatedEnemyList;
 
         // generating new wave, if needed
-        if (this.enemyQueue.length == 0 && this.activeEnemyList.length == 0 && (new Date() - this.lastGroupSpawnTime > groupSpawnInterval)) {
+        if (this.enemyQueue.length == 0 && this.activeEnemyList.length == 0 && (new Date() - this.lastGroupSpawnTime > Configs.groupSpawnInterval)) {
             this.generateWave();
             this.earnedMoney += 10 * this.currentWave;
             this.currentWave++;
             this.lastGroupSpawnTime = new Date();
         }
-        if (this.enemyQueue.length > 0 && (new Date - this.lastMobSpawnTime > mobSpawningInterval)) {
+        if (this.enemyQueue.length > 0 && (new Date - this.lastMobSpawnTime > Configs.mobSpawningInterval)) {
             this.activeEnemyList.push(this.enemyQueue.shift());
             this.lastMobSpawnTime = new Date();
         }
@@ -361,7 +345,7 @@ class GameModel {
         let maxTowerPosition = [maxLevelTower.position.tileX, maxLevelTower.position.tileY];
         let newTower = new TowerModel(maxTowerPosition[0], maxTowerPosition[1]);
         newTower.level = countNextLevel(maxLevelTower.level, minLevelTower.level);
-        newTower.colorId = countColorOnAbsorb(maxLevelTower.colorId, minLevelTower.colorId, colors.length);
+        newTower.colorId = countColorOnAbsorb(maxLevelTower.colorId, minLevelTower.colorId, Configs.colors.length);
         return newTower;
     }
 }
@@ -385,26 +369,26 @@ class GameView {
         }
 
         let canvas = document.getElementById('laserRayLayer');
-        canvas.style.width = '800px';
-        canvas.style.height = '800px';
-        canvas.style.top = '10px';
-        canvas.style.left = '10px';
+        canvas.style.width = `${Configs.mapSizePx}px`;
+        canvas.style.height = `${Configs.mapSizePx}px`;
+        canvas.style.top = `${Configs.paddingSizePx}px`;
+        canvas.style.left = `${Configs.paddingSizePx}px`;
         this.context = canvas.getContext('2d');
         this.context.lineWidth = 3;
 
         // adding baseHp progressbar on field
         this.baseLocation = modelInfo.calculateBaseLocation();
         let baseTile = document.getElementById(`tile_${this.baseLocation[0]}_${this.baseLocation[1]}`);
-        this.progressBarRadius = Math.trunc(baseTile.scrollHeight * 0.8 / 2);
+        this.progressBarRadius = Math.trunc(baseTile.scrollHeight * Configs.mapSizePx / 1000 / 2);
     }
 
     update() {
-        this.context.clearRect(0, 0, 800, 800);
+        this.context.clearRect(0, 0, Configs.mapSizePx, Configs.mapSizePx);
         // drawing laser rays
         this.origin.laserRayList.forEach((currentRay) => {
             let lineFrom = this.transformModelToCanvasCoords(currentRay.from, true);
             let lineTo = this.transformModelToCanvasCoords(currentRay.to, false);
-            this.context.strokeStyle = colors[currentRay.colorId];
+            this.context.strokeStyle = Configs.colors[currentRay.colorId];
             this.context.beginPath();
             this.context.moveTo(lineFrom.X, lineFrom.Y);
             this.context.lineTo(lineTo.X, lineTo.Y);
@@ -437,7 +421,7 @@ class GameView {
         let pathBeginPoint = this.transformModelToCanvasCoords(tower.position);
         let pathCoords = this.transformPath(towerTierPath[towerLevel], tower.currentRotation * Math.PI / 180, true);
         this.context.beginPath();
-        this.context.fillStyle = colors[tower.colorId];
+        this.context.fillStyle = Configs.colors[tower.colorId];
         this.context.moveTo(pathBeginPoint.X + pathCoords[0][0], pathBeginPoint.Y + pathCoords[0][1]);
         for (let i = 0; i < pathCoords.length; i++) {
             this.context.lineTo(pathBeginPoint.X + pathCoords[i][0], pathBeginPoint.Y + pathCoords[i][1]);
@@ -456,13 +440,13 @@ class GameView {
         let deltaX = Math.trunc(40 * (hpCoefficient)) - 20
         this.context.lineTo(pathBeginPoint.X  + deltaX, pathBeginPoint.Y - 40);
         this.context.closePath();
-        this.context.strokeStyle = `rgb(${Math.trunc(255 * (1 - hpCoefficient))}, ${Math.trunc(255 * hpCoefficient)}, ${0})`;
+        this.context.strokeStyle = `rgb(${Math.trunc(255 * (1 - hpCoefficient))}, ${Math.trunc(255 * hpCoefficient)}, 0)`;
         this.context.closePath();
         this.context.stroke();
 
         let pathCoords = this.transformPath(enemyTierPath[enemy.level], enemy.currentRotation * Math.PI / 180, false);
         this.context.beginPath();
-        this.context.fillStyle = colors[enemy.colorId];
+        this.context.fillStyle = Configs.colors[enemy.colorId];
         this.context.moveTo(pathBeginPoint.X + pathCoords[0][0], pathBeginPoint.Y + pathCoords[0][1]);
         for (let i = 0; i < pathCoords.length; i++) {
             this.context.lineTo(pathBeginPoint.X + pathCoords[i][0], pathBeginPoint.Y + pathCoords[i][1]);
@@ -518,7 +502,7 @@ class GameController {
         let tileMap = modelInfo.mapData.map;
         for (let y = 0; y < tileMap.length; y++) {
             for (let x = 0; x < tileMap[y].length; x++) {
-                if (tileMap[y][x] == towerTile)
+                if (tileMap[y][x] == Configs.towerTile)
                     document.getElementById(`tile_${x}_${y}`).addEventListener('click', () => { this.selectTower(x, y) })
             }
         }

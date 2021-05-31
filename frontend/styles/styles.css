@@ -192,21 +192,6 @@ body {
     margin: 20px;
 }
 
-.infoPanel {
-    /* TODO: сделать по аналогии с .screen, но относительный размер примерно 9/10 */
-    margin: 20px;
-    flex-grow: 1;
-    width: 400px;
-    height: 800px;
-    position: relative;
-    border-radius: 15px;
-    background-color: #333;
-    flex-direction: column;
-    display: flex;
-    padding: 10px;
-    box-shadow: 0 0 20px 10px black;    
-}
-
 .tileRow {
     height: 80px;
     flex-grow: 1;

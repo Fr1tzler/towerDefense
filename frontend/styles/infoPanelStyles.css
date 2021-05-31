@@ -1,16 +1,19 @@
-/* WAVE INFO START */
-
-.waveInfoContainer {
-    background-color: #666;
-    padding: 10px;
-    border-radius: 10px;
-    width: fit-content;
-    display: flex;
-    flex-direction: column;
-    margin: 10px;
+.infoPanel {
+    /* TODO: сделать по аналогии с .screen, но относительный размер примерно 9/10 */
+    margin: 20px;
     flex-grow: 1;
-    height: 100px;
+    width: 400px;
+    height: 800px;
+    position: relative;
+    border-radius: 15px;
+    background-color: #333;
+    flex-direction: column;
+    display: flex;
+    padding: 10px;
+    box-shadow: 0 0 20px 10px black;    
 }
+
+/* WAVE INFO START */
 
 .waveInfoText {
     font-size: x-large;
@@ -43,37 +46,50 @@
     flex-direction: row;
 }
 
-.towerInfoImage {
-    position: relative;
-    background-color: #333;
-    border-radius: 5px;
+.infoPanelShort {
+    height: 100px;
     flex-grow: 1;
-    margin: 5px;
+    display: flex;
+    flex-direction: row;
 }
 
-.towerInfoData {
-    position: relative;
-    background-color: #555;
+.waveInfoContainer {
+    background-color: #666;
+    padding: 5px;
     border-radius: 5px;
-    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
     margin: 5px;
+    flex-grow: 1;
 }
 
 .towerMergeButton {
-    background-color: #222;
     position: relative;
+    background-color: #666;
     margin: 5px;
     border-radius: 5px;
-    height: min-content;
+    padding: 5px;
     flex-grow: 1;
 }
 
+/* FIXME: */
 .mergeButtonLabel {
     position: absolute;
-    height: min-content;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
 }
 
-/* TOWER MERGE END */
+.towerInfoData {
+    position: relative;
+    background-color: #666;
+    border-radius: 5px;
+    flex-grow: 1;
+    margin: 5px;
+}
+
+.infoPanelLarge {
+    height: 200px;
+    flex-grow: 1;
+    display: flex;
+}

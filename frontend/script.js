@@ -120,8 +120,8 @@ class TowerModel {
         this.colorId = getRandomInt(0, colors.length);
     }
 
-    getDamage() {
-        return this.level * 10;
+    calculateRawDamage() {
+        return this.level * 15;
     }
 
     update(deltaTime, laserRayList) {
@@ -141,6 +141,9 @@ class TowerModel {
                 to: this.currentTarget.position,
                 colorId: this.colorId
             });
+            if (!this.currentTarget.isAlive && !this.currentTarget.towerLevelledUp)
+                this.level *= 1.01;
+                this.currentTarget.towerLevelledUp = true;
         }
     }
 
@@ -170,8 +173,9 @@ class TowerModel {
 }
 
 class EnemyModel {
-    constructor(waypoints, colorId) {
-        this.healthPoints = 300; // TODO: балансные правки
+    constructor(waypoints, colorId, level) {
+        this.maxHP = 200 * level;
+        this.healthPoints = 200 * level;
         this.colorId = colorId;
         this.isAlive = true;
         this.waypoints = [];
@@ -187,7 +191,8 @@ class EnemyModel {
         this.speed = 1 / 5; // CONVENTIONAL UNITS / MILLIS
         this.reachedBase = false;
         this.currentRotation = 0;
-        this.level = 1;
+        this.level = level;
+        this.towerLevelledUp = false;
     }
 
     receiveDamage(incomingDamage) {
@@ -263,8 +268,10 @@ class GameModel {
 
     generateWave() {
         let enemyWaveColor = getRandomInt(0, colors.length);
-        for (let i = 0; i < 3 + Math.trunc(this.currentWave / 2); i++)
-            this.enemyQueue.push(new EnemyModel(this.mapData.waypoints, enemyWaveColor));
+        let enemyLevel = Math.min(Math.trunc((this.currentWave + 2) / 4) + 1, 8);
+        let enemyCount = Math.trunc(this.currentWave / 4) + 3;
+        for (let i = 0; i < enemyCount; i++)
+            this.enemyQueue.push(new EnemyModel(this.mapData.waypoints, enemyWaveColor, enemyLevel));
     }
 
     update(deltaTime) {
@@ -278,7 +285,7 @@ class GameModel {
         this.activeEnemyList.forEach((enemy) => {
             if (!enemy.isAlive) {
                 this.recentlyDeletedEnemy.push(enemy);
-                this.earnedMoney += 1 * enemy.level;
+                this.earnedMoney += 3 * enemy.level;
             }
             else if (enemy.reachedBase) {
                 this.recentlyDeletedEnemy.push(enemy);
@@ -334,6 +341,7 @@ class GameModel {
         this.towerMap.delete(firstKey);
         this.towerMap.set(firstKey, new TowerModel(minLevelTower.position.tileX, minLevelTower.position.tileY));
         this.towerMap.delete(secondKey);
+        this.towerOnMerge.currentRotation = maxLevelTower.currentRotation;
         this.towerMap.set(secondKey, this.towerOnMerge);
     }
 
@@ -415,6 +423,7 @@ class GameView {
         })
         // other view changes
         document.getElementById('waveHpValue').innerText = `${Math.trunc(this.origin.totalWaveHp * 10) / 10}`;
+        document.getElementById('currentMoneyValue').innerText = `${this.origin.earnedMoney}`;
         this.drawBaseHP();
     }
 
@@ -441,6 +450,16 @@ class GameView {
 
     drawEnemyOnCanvas(enemy) {
         let pathBeginPoint = this.transformModelToCanvasCoords(enemy.position);
+        this.context.beginPath();
+        this.context.moveTo(pathBeginPoint.X - 20, pathBeginPoint.Y - 40);
+        let hpCoefficient = enemy.healthPoints / enemy.maxHP;
+        let deltaX = Math.trunc(40 * (hpCoefficient)) - 20
+        this.context.lineTo(pathBeginPoint.X  + deltaX, pathBeginPoint.Y - 40);
+        this.context.closePath();
+        this.context.strokeStyle = `rgb(${Math.trunc(255 * (1 - hpCoefficient))}, ${Math.trunc(255 * hpCoefficient)}, ${0})`;
+        this.context.closePath();
+        this.context.stroke();
+
         let pathCoords = this.transformPath(enemyTierPath[enemy.level], enemy.currentRotation * Math.PI / 180, false);
         this.context.beginPath();
         this.context.fillStyle = colors[enemy.colorId];

@@ -409,6 +409,7 @@ class GameView {
         document.getElementById('waveHpValue').innerText = `${Math.trunc(this.origin.totalWaveHp * 10) / 10}`;
         document.getElementById('currentMoneyValue').innerText = `${this.origin.earnedMoney}`;
         this.drawBaseHP();
+        this.drawTowersInInfoPanel();
     }
 
     // hardcode alert
@@ -419,7 +420,7 @@ class GameView {
     drawTowerOnCanvas(tower) {
         let towerLevel = Math.min(Math.trunc(tower.level), 8);
         let pathBeginPoint = this.transformModelToCanvasCoords(tower.position);
-        let pathCoords = this.transformPath(towerTierPath[towerLevel], tower.currentRotation * Math.PI / 180, true);
+        let pathCoords = this.transformPath(towerTierPath[towerLevel], tower.currentRotation * Math.PI / 180, 0.7);
         this.context.beginPath();
         this.context.fillStyle = Configs.colors[tower.colorId];
         this.context.moveTo(pathBeginPoint.X + pathCoords[0][0], pathBeginPoint.Y + pathCoords[0][1]);
@@ -444,7 +445,7 @@ class GameView {
         this.context.closePath();
         this.context.stroke();
 
-        let pathCoords = this.transformPath(enemyTierPath[enemy.level], enemy.currentRotation * Math.PI / 180, false);
+        let pathCoords = this.transformPath(enemyTierPath[enemy.level], enemy.currentRotation * Math.PI / 180, 0.5);
         this.context.beginPath();
         this.context.fillStyle = Configs.colors[enemy.colorId];
         this.context.moveTo(pathBeginPoint.X + pathCoords[0][0], pathBeginPoint.Y + pathCoords[0][1]);
@@ -473,8 +474,7 @@ class GameView {
         this.context.strokeStyle = 'black';
     }
 
-    transformPath(towerPath, angle, isTower) {
-        let multiplier = isTower ? 0.8 : 0.5;
+    transformPath(towerPath, angle, multiplier) {
         let result = [];
         for (let i = 0; i < towerPath.length; i++) {
             result.push([]);
@@ -486,6 +486,45 @@ class GameView {
         return result;
     }
 
+    drawTowersInInfoPanel() {
+        if (this.origin.selectedTowers.length == 0)
+            return;
+        if (this.origin.selectedTowers.length == 1) {
+            let coords = this.origin.selectedTowers[0];
+            let tower = this.origin.towerMap.get(coords[0] * 10 + coords[1]);
+            this.drawTowerInInfoPanelCanvas(tower, 1);
+            return;
+        }
+        let coords1 = this.origin.selectedTowers[0];
+        let coords2 = this.origin.selectedTowers[1];
+        let tower1 = this.origin.towerMap.get(coords1[0] * 10 + coords1[1]);
+        let tower2 = this.origin.towerMap.get(coords2[0] * 10 + coords2[1]);
+        this.drawTowerInInfoPanelCanvas(tower1, 1);
+        this.drawTowerInInfoPanelCanvas(tower2, 2);
+        this.drawTowerInInfoPanelCanvas(this.origin.towerOnMerge, 3);
+    }
+
+    drawTowerInInfoPanelCanvas(tower, frameId) {
+        let canvas = document.getElementById(`towerInfoImage${frameId}`);
+        let context = canvas.getContext('2d');
+        let level = Math.trunc(tower.level);
+        let rawPath = towerTierPath[Math.min(level, 8)];
+        let towerPath = this.transformPath(rawPath, tower.currentRotation, 1.6);
+        
+        context.beginPath();
+        context.fillStyle = Configs.colors[tower.colorId];
+        context.moveTo(100 + towerPath[0][0], 100 + towerPath[0][1]);
+        for (let i = 0; i < towerPath.length; i++) {
+            context.lineTo(100 + towerPath[i][0], 100 + towerPath[i][1]);
+        }
+        context.closePath();
+        context.strokeStyle = '#000';
+        context.fill();
+        context.stroke();
+
+        let towerDataContainer = document.getElementById(`towerInfoData${frameId}`);
+        // TODO: write tower stats: level, damage, maximum distance
+    }
 
     tileToClassDictionary = {
         'e': 'emptyTile',

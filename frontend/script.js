@@ -13,7 +13,11 @@ const gameStages = [
     'game',
     'aftergame'
 ]
-let currentGameStage = 0;
+
+let currentGameStage = 1;
+let lastKnownGameStage = 0;
+
+let game = undefined;
 
 document.addEventListener('DOMContentLoaded', init);
 
@@ -23,16 +27,48 @@ function init() {
         document.getElementById('usernameField').value = usernameCookie;
     document.getElementById('confirmUsername').addEventListener('click', saveUsernameInCookies);
 
-    let game = new Game(tempMap);
-    let timer = setInterval(mainloop, 1000 / Configs.fps, game);
     document.addEventListener('focus', () => {pageFocused = true});
     document.addEventListener('blur', () => {pageFocused = false});
+
+    document.getElementById('startNewGame').addEventListener('click',  () => { currentGameStage = 1; });
+
+    mainloop();
 }
 
-function mainloop(game) {
-    if (game.gameEnded)
-        return;
-    game.update(1000 / Configs.fps);
+// обновляется 50 раз в секунду
+function mainloop() {
+    console.log(currentGameStage);
+    if (currentGameStage == lastKnownGameStage == 1) {
+        game.update(1000 / Configs.fps)
+    } else {
+        switch (currentGameStage) {
+            case 0:
+                document.getElementById('pregame').style.visibility = 'visible';
+                document.getElementById('game').style.visibility = 'hidden';
+                document.getElementById('aftergame').style.visibility = 'hidden';
+                break;
+            case 1:
+                document.getElementById('pregame').style.visibility = 'hidden';
+                document.getElementById('game').style.visibility = 'visible';
+                document.getElementById('aftergame').style.visibility = 'hidden';
+                game = new Game(tempMap);
+                game.update(1000 / Configs.fps);
+                if (game.gameEnded) {
+                    lastKnownGameStage = currentGameStage;        
+                    currentGameStage = (currentGameStage + 1) % 3;
+                }
+                break;
+            case 2:
+                document.getElementById('pregame').style.visibility = 'hidden';
+                document.getElementById('game').style.visibility = 'hidden';
+                document.getElementById('aftergame').style.visibility = 'visible';
+                break;
+            default:
+                break;
+        }    
+    }
+    lastKnownGameStage = currentGameStage;
+    let timer = setTimeout(mainloop, 1000 / Configs.fps);
 }
 
 function saveUsernameInCookies() {

@@ -5,7 +5,7 @@ export const towerDistanceArea = 400;
 export const fps = 50;
 export const towerTile = 't';
 export const mobSpawningInterval = 800; // mob spawn interval in milliseconds
-export const groupSpawnInterval = 2000; // milliseconds between last mob killed and new group spawn
+export const ticksBetweenMobs = Math.trunc(mobSpawningInterval / (1000 / fps));
 export const colors = [
     '#FF3C00', // orangered
     '#F79A00', // orange

@@ -224,8 +224,7 @@ class GameModel {
         this.enemyQueue = [];
         this.activeEnemyList = [];
         this.towerMap = new Map();
-        this.lastMobSpawnTime = new Date();
-        this.lastGroupSpawnTime = new Date();
+        this.lastMobSpawn = 0;
         this.recentlyDeletedEnemy = [];
         for (let y = 0; y < mapData.map.length; y++)
             for (let x = 0; x < mapData.map[y].length; x++)
@@ -282,15 +281,14 @@ class GameModel {
         this.activeEnemyList = updatedEnemyList;
 
         // generating new wave, if needed
-        if (this.enemyQueue.length == 0 && this.activeEnemyList.length == 0 && (new Date() - this.lastGroupSpawnTime > Configs.groupSpawnInterval)) {
+        if (this.enemyQueue.length == 0 && this.activeEnemyList.length == 0) {
             this.generateWave();
             this.earnedMoney += 10 * this.currentWave;
             this.currentWave++;
-            this.lastGroupSpawnTime = new Date();
         }
-        if (this.enemyQueue.length > 0 && (new Date - this.lastMobSpawnTime > Configs.mobSpawningInterval)) {
+        if (this.enemyQueue.length > 0 && this.lastMobSpawn > Configs.ticksBetweenMobs) {
             this.activeEnemyList.push(this.enemyQueue.shift());
-            this.lastMobSpawnTime = new Date();
+            this.lastMobSpawn = 0;
         }
 
         // calculating waveHP, might be useful
@@ -303,6 +301,8 @@ class GameModel {
             this.towerOnMerge = this.getTowerOnMerge();
             this.mergeCost = Math.trunc(this.towerOnMerge.level * 10);
         }
+
+        this.lastMobSpawn++;
     }
 
     mergeTowers() {

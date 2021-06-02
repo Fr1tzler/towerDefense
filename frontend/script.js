@@ -236,6 +236,7 @@ class GameModel {
         this.selectedTowers = [];
         this.towerOnMerge = undefined;
         this.earnedMoney = 0;
+        this.mergeCost = 0;
     }
 
     calculateBaseLocation() {
@@ -300,16 +301,16 @@ class GameModel {
             this.totalWaveHp += this.enemyQueue[i].healthPoints;
         if (this.selectedTowers.length == 2) {
             this.towerOnMerge = this.getTowerOnMerge();
+            this.mergeCost = Math.trunc(this.towerOnMerge.level * 10);
         }
     }
 
     mergeTowers() {
         if (this.selectedTowers.length != 2)
             return;
-        let cost = Math.trunc(this.towerOnMerge.level * 10);
-        if (this.earnedMoney < cost)
+        if (this.earnedMoney < this.mergeCost)
             return
-        this.earnedMoney -= cost;
+        this.earnedMoney -= this.mergeCost;
         let firstKey = this.selectedTowers[0][0] * 10 + this.selectedTowers[0][1];
         let secondKey = this.selectedTowers[1][0] * 10 + this.selectedTowers[1][1];
         let towers = [this.towerMap.get(firstKey), this.towerMap.get(secondKey)];
@@ -380,6 +381,7 @@ class GameView {
         this.baseLocation = modelInfo.calculateBaseLocation();
         let baseTile = document.getElementById(`tile_${this.baseLocation[0]}_${this.baseLocation[1]}`);
         this.progressBarRadius = Math.trunc(baseTile.scrollHeight * Configs.mapSizePx / 1000 / 2);
+        this.mergeButton = document.getElementById('mergeButtonLabel');
     }
 
     update() {
@@ -406,13 +408,13 @@ class GameView {
             this.drawEnemyOnCanvas(enemy);
         })
         // other view changes
-        document.getElementById('waveHpValue').innerText = `${Math.trunc(this.origin.totalWaveHp * 10) / 10}`;
-        document.getElementById('currentMoneyValue').innerText = `${this.origin.earnedMoney}`;
+        document.getElementById('currentWaveValue').innerText = `Волна ${this.origin.currentWave}`;
+        document.getElementById('currentMoneyValue').innerText = `${this.origin.earnedMoney} гривень`;
         this.drawBaseHP();
         this.drawTowersInInfoPanel();
+        this.mergeButton.innerText = `Merge! (${this.origin.mergeCost} гривень)`
     }
 
-    // hardcode alert
     transformModelToCanvasCoords(coords) {
         return { X: coords.X * 0.8, Y: coords.Y * 0.8 };
     }
@@ -509,8 +511,9 @@ class GameView {
         let context = canvas.getContext('2d');
         let level = Math.trunc(tower.level);
         let rawPath = towerTierPath[Math.min(level, 8)];
-        let towerPath = this.transformPath(rawPath, tower.currentRotation, 1.6);
-        
+        let towerPath = this.transformPath(rawPath, tower.currentRotation * Math.PI / 180, 1.6);
+        context.clearRect(0, 0, 200, 200);
+        context.lineWidth = 5;
         context.beginPath();
         context.fillStyle = Configs.colors[tower.colorId];
         context.moveTo(100 + towerPath[0][0], 100 + towerPath[0][1]);
@@ -523,7 +526,11 @@ class GameView {
         context.stroke();
 
         let towerDataContainer = document.getElementById(`towerInfoData${frameId}`);
-        // TODO: write tower stats: level, damage, maximum distance
+        let towerData = {
+            level: Math.trunc(tower.level * 10) / 10,
+            damage: Math.trunc(tower.calculateRawDamage()),
+        }
+        towerDataContainer.innerHTML = `Level : ${towerData.level}<br>Damage : ${towerData.damage}`;
     }
 
     tileToClassDictionary = {

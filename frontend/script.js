@@ -43,14 +43,10 @@ function mainloop() {
     } else {
         switch (currentGameStage) {
             case 0:
-                document.getElementById('pregame').style.visibility = 'visible';
-                document.getElementById('game').style.visibility = 'hidden';
-                document.getElementById('aftergame').style.visibility = 'hidden';
+                makeScreenVisible('pregame');
                 break;
             case 1:
-                document.getElementById('pregame').style.visibility = 'hidden';
-                document.getElementById('game').style.visibility = 'visible';
-                document.getElementById('aftergame').style.visibility = 'hidden';
+                makeScreenVisible('game');
                 game = new Game(tempMap);
                 game.update(1000 / Configs.fps);
                 if (game.gameEnded) {
@@ -59,9 +55,7 @@ function mainloop() {
                 }
                 break;
             case 2:
-                document.getElementById('pregame').style.visibility = 'hidden';
-                document.getElementById('game').style.visibility = 'hidden';
-                document.getElementById('aftergame').style.visibility = 'visible';
+                makeScreenVisible('aftergame');
                 break;
             default:
                 break;
@@ -69,6 +63,13 @@ function mainloop() {
     }
     lastKnownGameStage = currentGameStage;
     let timer = setTimeout(mainloop, 1000 / Configs.fps);
+}
+
+function makeScreenVisible(screenId) {
+    document.getElementById('pregame').style.visibility = 'hidden';
+    document.getElementById('game').style.visibility = 'hidden';
+    document.getElementById('aftergame').style.visibility = 'hidden';
+    document.getElementById(screenId).style.visibility = 'hidden';
 }
 
 function saveUsernameInCookies() {

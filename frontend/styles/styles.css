@@ -199,8 +199,6 @@ body {
     flex-direction: row;
 }
 
-/* TILE STYLE START */
-
 .tile {
     flex-grow: 1;
     margin: 3px;
@@ -236,47 +234,6 @@ body {
 .baseTile {
     background-color: rgb(0, 110, 0);
 }
-
-/* TILE STYLE END */
-
-/* GEOMETRIC FIGURES STYLE START */
-
-.tower {
-    background-color: black;
-    width: 80%;
-    height: 80%;
-    position: relative;
-    margin: auto;
-}
-
-.towerInner {
-    width: 90%;
-    height: 90%;
-    position: relative;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
-
-.enemy {
-    background-color: black;
-    width: 50px;
-    height: 50px;
-    position: absolute;
-    transform: translate(-50%, -50%);
-    transition: all ease 0.03s;
-}
-
-.enemyInner {
-    width: 90%;
-    height: 90%;
-    position: relative;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
-
-/* GEOMETRIC FIGURES STYLE END */
 
 .laserRayLayer {
     position: absolute;

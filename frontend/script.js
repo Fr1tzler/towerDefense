@@ -500,12 +500,11 @@ class GameController {
     constructor(modelInfo) {
         this.origin = modelInfo;
         let tileMap = modelInfo.mapData.map;
-        for (let y = 0; y < tileMap.length; y++) {
-            for (let x = 0; x < tileMap[y].length; x++) {
+        for (let y = 0; y < tileMap.length; y++)
+            for (let x = 0; x < tileMap[y].length; x++)
                 if (tileMap[y][x] == Configs.towerTile)
                     document.getElementById(`tile_${x}_${y}`).addEventListener('click', () => { this.selectTower(x, y) })
-            }
-        }
+            
         document.getElementById('towerMergeButton').addEventListener('click', () => { this.origin.mergeTowers() });
     }
 

@@ -2,22 +2,42 @@ import { towerTierPath, enemyTierPath } from './geometry.js';
 import { getRandomInt, countNextLevel, countColorOnAbsorb, countDamageMultiplier, calculateSegmentAngle } from './mathModule.js';
 import * as Configs from './configs.js';
 
+const tempMap = {
+    map: [
+        ['e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e'],
+        ['e', 'r', 'r', 'r', 'e', 'e', 'r', 'r', 'r', 'e'],
+        ['e', 'r', 't', 'r', 'e', 'e', 'r', 't', 'r', 'e'],
+        ['e', 'r', 't', 'r', 'e', 'e', 'r', 't', 'r', 'e'],
+        ['e', 'r', 't', 'r', 'e', 'e', 'r', 't', 'r', 'e'],
+        ['e', 'r', 't', 'r', 'e', 'e', 'r', 't', 'r', 'e'],
+        ['e', 'r', 't', 'r', 'e', 'e', 'r', 't', 'r', 'e'],
+        ['e', 'r', 't', 'r', 'e', 'e', 'r', 't', 'r', 'e'],
+        ['e', 'r', 't', 'r', 'r', 'r', 'r', 't', 'r', 'e'],
+        ['e', 'b', 'e', 'e', 'e', 'e', 'e', 'e', 's', 'e']
+    ],
+    waypoints: [
+        { X: 8, Y: 9 },
+        { X: 8, Y: 1 },
+        { X: 6, Y: 1 },
+        { X: 6, Y: 8 },
+        { X: 3, Y: 8 },
+        { X: 3, Y: 1 },
+        { X: 1, Y: 1 },
+        { X: 1, Y: 9 },
+    ]
+}
+
 let mapPage = 0;
 let username = 'username';
 let score = 0;
 let mapId = 0;
 let pageFocused = true;
 
-const gameStages = [
-    'pregame',
-    'game',
-    'aftergame'
-]
-
-let currentGameStage = 1;
+let currentGameStage = 0;
 let lastKnownGameStage = 0;
 
 let game = undefined;
+let selectedMap = tempMap;
 
 document.addEventListener('DOMContentLoaded', init);
 
@@ -31,27 +51,31 @@ function init() {
     document.addEventListener('blur', () => {pageFocused = false});
 
     document.getElementById('startNewGame').addEventListener('click',  () => { currentGameStage = 1; });
+    document.getElementById('gotoNewGameScreen').addEventListener('click', () => { currentGameStage = 0; })
 
     mainloop();
 }
 
-// обновляется 50 раз в секунду
 function mainloop() {
-    console.log(currentGameStage);
-    if (currentGameStage == lastKnownGameStage == 1) {
-        game.update(1000 / Configs.fps)
+    console.log(lastKnownGameStage + ' ' + currentGameStage);
+    if (currentGameStage == lastKnownGameStage) {
+        if (currentGameStage == 1)
+            game.update(1000 / Configs.fps)
     } else {
+        lastKnownGameStage = currentGameStage;
         switch (currentGameStage) {
             case 0:
+                requestMapPage();
                 makeScreenVisible('pregame');
                 break;
             case 1:
                 makeScreenVisible('game');
-                game = new Game(tempMap);
+                game = new Game(selectedMap);
                 game.update(1000 / Configs.fps);
                 if (game.gameEnded) {
+                    game = undefined;
+                    requestGameStats();
                     lastKnownGameStage = currentGameStage;        
-                    currentGameStage = (currentGameStage + 1) % 3;
                 }
                 break;
             case 2:
@@ -59,17 +83,16 @@ function mainloop() {
                 break;
             default:
                 break;
-        }    
+        }
     }
-    lastKnownGameStage = currentGameStage;
-    let timer = setTimeout(mainloop, 1000 / Configs.fps);
+    setTimeout(mainloop, 1000 / Configs.fps);
 }
 
 function makeScreenVisible(screenId) {
     document.getElementById('pregame').style.visibility = 'hidden';
     document.getElementById('game').style.visibility = 'hidden';
     document.getElementById('aftergame').style.visibility = 'hidden';
-    document.getElementById(screenId).style.visibility = 'hidden';
+    document.getElementById(screenId).style.visibility = 'visible';
 }
 
 function saveUsernameInCookies() {
@@ -147,6 +170,7 @@ class TowerModel {
         if (Math.abs(deltaRotation) > 180)
             deltaRotation -= Math.sign(deltaRotation) * 360;
         this.currentRotation += Math.sign(deltaRotation) * Math.min(this.rotationSpeed * deltaTime, Math.abs(deltaRotation));
+        this.currentRotation %= 360;
         let remainingRotation = this.targetRotation - this.currentRotation;
         if (Math.abs(remainingRotation) > 180)
             remainingRotation -= Math.sign(remainingRotation) * 360;
@@ -190,8 +214,8 @@ class TowerModel {
 
 class EnemyModel {
     constructor(waypoints, colorId, level) {
-        this.maxHP = 200 * level;
-        this.healthPoints = 200 * level;
+        this.maxHP = 2000 * level;
+        this.healthPoints = 2000 * level; // FIXME:
         this.colorId = colorId;
         this.isAlive = true;
         this.waypoints = [];
@@ -620,29 +644,4 @@ class Game {
         this.view.update();
         this.gameEnded = !(this.model.baseHp > 0);
     }
-}
-
-const tempMap = {
-    map: [
-        ['e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e'],
-        ['e', 'r', 'r', 'r', 'e', 'e', 'r', 'r', 'r', 'e'],
-        ['e', 'r', 't', 'r', 'e', 'e', 'r', 't', 'r', 'e'],
-        ['e', 'r', 't', 'r', 'e', 'e', 'r', 't', 'r', 'e'],
-        ['e', 'r', 't', 'r', 'e', 'e', 'r', 't', 'r', 'e'],
-        ['e', 'r', 't', 'r', 'e', 'e', 'r', 't', 'r', 'e'],
-        ['e', 'r', 't', 'r', 'e', 'e', 'r', 't', 'r', 'e'],
-        ['e', 'r', 't', 'r', 'e', 'e', 'r', 't', 'r', 'e'],
-        ['e', 'r', 't', 'r', 'r', 'r', 'r', 't', 'r', 'e'],
-        ['e', 'b', 'e', 'e', 'e', 'e', 'e', 'e', 's', 'e']
-    ],
-    waypoints: [
-        { X: 8, Y: 9 },
-        { X: 8, Y: 1 },
-        { X: 6, Y: 1 },
-        { X: 6, Y: 8 },
-        { X: 3, Y: 8 },
-        { X: 3, Y: 1 },
-        { X: 1, Y: 1 },
-        { X: 1, Y: 9 },
-    ]
 }

@@ -25,7 +25,7 @@ body {
     left: 0;
     display: flex;
     position: absolute;
-    transition: all ease 200ms;
+    transition: all ease 1000ms;
 }
 
 .screen {

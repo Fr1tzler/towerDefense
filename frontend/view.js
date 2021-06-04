@@ -5,8 +5,7 @@ export class GameView {
     constructor(modelInfo) {
         this.origin = modelInfo;
         let tileScreen = document.getElementById('tileScreen');
-        tileScreen.innerHTML = '<canvas class="laserRayLayer" id="laserRayLayer" height="800" width="800"></canvas>'; // FIXME: поправить, когда будет время
-
+        tileScreen.innerHTML = '<canvas class="laserRayLayer" id="laserRayLayer" height="800" width="800" ></canvas>'; // FIXME: поправить, когда будет время
         for (let tileY = 0; tileY < 10; tileY++) {
             let row = document.createElement('div');
             row.className = 'tileRow';
@@ -21,10 +20,7 @@ export class GameView {
         }
 
         let canvas = document.getElementById('laserRayLayer');
-        canvas.style.width = `${Configs.mapSizePx}px`;
-        canvas.style.height = `${Configs.mapSizePx}px`;
-        canvas.style.top = `${Configs.paddingSizePx}px`;
-        canvas.style.left = `${Configs.paddingSizePx}px`;
+
         this.context = canvas.getContext('2d');
         this.context.lineWidth = 3;
 

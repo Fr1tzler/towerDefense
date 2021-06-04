@@ -2,10 +2,9 @@ export const mapSizePx = 800;
 export const paddingSizePx = 10;
 export const tileLengthMultipier = 100;
 export const towerDistanceArea = 400;
-export const fps = 50;
 export const towerTile = 't';
 export const mobSpawningInterval = 800; // mob spawn interval in milliseconds
-export const ticksBetweenMobs = Math.trunc(mobSpawningInterval / (1000 / fps));
+export const ticksBetweenMobs = Math.trunc(mobSpawningInterval / (1000 / 50 /* fps */));
 export const colors = [
     '#FF3C00', // orangered
     '#F79A00', // orange

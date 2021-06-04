@@ -238,9 +238,7 @@ body {
 .laserRayLayer {
     position: absolute;
     pointer-events: none;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    width: inherit;
+    height: inherit;
     z-index: 1000;
 }

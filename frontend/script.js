@@ -1,7 +1,4 @@
-import { GameModel } from './model.js';
-import { GameView } from './view.js';
-import { GameController } from './controller.js';
-import * as Configs from './configs.js';
+import { Game } from './game.js';
 
 const tempMap = {
     map: [
@@ -39,6 +36,8 @@ let lastKnownGameStage = 0;
 
 let game = undefined;
 let selectedMap = tempMap;
+
+const fps = 50;
 
 document.addEventListener('DOMContentLoaded', init);
 
@@ -86,7 +85,7 @@ function mainloop() {
                 break;
         }
     }
-    setTimeout(mainloop, 1000 / Configs.fps);
+    setTimeout(mainloop, 1000 / fps);
 }
 
 function makeScreenVisible(screenId) {
@@ -147,21 +146,4 @@ function updateLeaderbords(leaders) {
 //TODO: отрисовка страницы с картами на стартовом экране
 function drawMaps(mapList) {
     console.log(mapList);
-}
-
-class Game {
-    constructor(mapData) {
-        this.model = new GameModel(mapData);
-        this.view = new GameView(this.model);
-        this.controller = new GameController(this.model);
-        this.gameEnded = false;
-    }
-
-    update() {
-        if (this.gameEnded)
-            return;
-        this.model.update();
-        this.view.update();
-        this.gameEnded = !(this.model.baseHp > 0);
-    }
 }

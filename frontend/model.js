@@ -1,7 +1,7 @@
 import * as Configs from './configs.js';
 import { getRandomInt, countNextLevel, countColorOnAbsorb, countDamageMultiplier, calculateSegmentAngle } from './mathModule.js';
 
-export class TowerModel {
+class TowerModel {
     constructor(mapX, mapY) {
         this.position = {
             tileX: mapX, // TILE
@@ -71,7 +71,7 @@ export class TowerModel {
     }
 }
 
-export class EnemyModel {
+class EnemyModel {
     constructor(waypoints, colorId, level) {
         this.maxHP = 500 * level;
         this.healthPoints = 500 * level;

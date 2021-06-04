@@ -1,6 +1,6 @@
-import { GameModel } from './model.js';
-import { GameView } from './view.js';
-import { GameController } from './controller.js';
+import { GameModel } from './model/gameModel.js';
+import { GameView } from './view/gameView.js';
+import { GameController } from './controller/gameController.js';
 
 export class Game {
     constructor(mapData) {

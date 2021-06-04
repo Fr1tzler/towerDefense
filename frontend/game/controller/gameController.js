@@ -1,4 +1,4 @@
-import * as Configs from './configs.js';
+import * as Configs from '../configs.js';
 
 export class GameController {
     constructor(modelInfo) {

@@ -1,4 +1,4 @@
-import * as Configs from './configs.js';
+import * as Configs from '../configs.js';
 import { getRandomInt, countNextLevel, countColorOnAbsorb, countDamageMultiplier, calculateSegmentAngle } from './mathModule.js';
 
 class TowerModel {

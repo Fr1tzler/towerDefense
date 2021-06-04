@@ -1,10 +1,16 @@
 const express = require("express");
 const path = require('path');
-const bodyParser = require('body-parser');
-const mysql = require('mysql2');
+const http = require('http');
+const https = require('https');
+const fs = require('fs');
+// const MongoClient = require('mongodb').MongoClient;
+
+const privateKey = fs.readFileSync('/etc/letsencrypt/live/fritzler.ru/privkey.pem');
+const certificate = fs.readFileSync('/etc/letsencrypt/live/fritzler.ru/fullchain.pem');
+const credentials = {key: privateKey, cert: certificate};
 
 const app = express();
-const port = 80;
+const dbPort = 0;
 
 app.use(express.static(path.join(__dirname, 'frontend')));
 app.use(express.urlencoded({ extended: false}));
@@ -39,7 +45,27 @@ app.post('/send_game_stats', (request, response) => {
     });
 });
 
+const httpServer = http.createServer(app);
+const httpsServer = https.createServer(credentials, app);
 
-app.listen(port, () => {
-    console.log(`Server listening at http://localhost:${port}`)
-});
+httpServer.listen(80);
+httpsServer.listen(443);
+
+
+/*
+проверить и убрать в случае чего 
+app.listen(serverPort, () => {
+    console.log(`Server listening at http://localhost:${serverPort}`)
+});*/
+
+/*
+// TODO:
+const mongoClient = new MongoClient(`mongodb://localhost:${dbPort}/`, { useUnifiedTopology: true });
+mongoClient.connect(function(err, client){
+ 
+    if(err){
+        return console.log(err);
+    }
+
+    client.close();
+});*/

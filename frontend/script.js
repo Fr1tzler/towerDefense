@@ -1,29 +1,6 @@
 import { Game } from './game/gameMain.js';
 
-const tempMap = {
-    map: [
-        ['e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e'],
-        ['e', 'r', 'r', 'r', 'e', 'e', 'r', 'r', 'r', 'e'],
-        ['e', 'r', 't', 'r', 'e', 'e', 'r', 't', 'r', 'e'],
-        ['e', 'r', 't', 'r', 'e', 'e', 'r', 't', 'r', 'e'],
-        ['e', 'r', 't', 'r', 'e', 'e', 'r', 't', 'r', 'e'],
-        ['e', 'r', 't', 'r', 'e', 'e', 'r', 't', 'r', 'e'],
-        ['e', 'r', 't', 'r', 'e', 'e', 'r', 't', 'r', 'e'],
-        ['e', 'r', 't', 'r', 'e', 'e', 'r', 't', 'r', 'e'],
-        ['e', 'r', 't', 'r', 'r', 'r', 'r', 't', 'r', 'e'],
-        ['e', 'b', 'e', 'e', 'e', 'e', 'e', 'e', 's', 'e']
-    ],
-    waypoints: [
-        { X: 8, Y: 9 },
-        { X: 8, Y: 1 },
-        { X: 6, Y: 1 },
-        { X: 6, Y: 8 },
-        { X: 3, Y: 8 },
-        { X: 3, Y: 1 },
-        { X: 1, Y: 1 },
-        { X: 1, Y: 9 },
-    ]
-}
+let mapList;
 
 let mapPage = 1;
 let username = 'username';
@@ -34,9 +11,10 @@ let currentGameStage = 0;
 let lastKnownGameStage = 0;
 
 let game = undefined;
-let selectedMap = tempMap;
 
 const fps = 50;
+
+let selectedMap = 0;
 
 document.addEventListener('DOMContentLoaded', init);
 
@@ -48,11 +26,19 @@ function init() {
     }
     document.getElementById('confirmUsername').addEventListener('click', saveUsername);
 
+    for (let i = 0; i < 9; i++) { 
+        document.getElementById(`preview_${i + 1}`).addEventListener('click', function() {
+            for (let j = 0; j < 9; j++) {
+                document.getElementById(`preview_${i + 1}`).style.backgroundColor = '#999';
+            }
+            document.getElementById(`preview_${i + 1}`).style.backgroundColor = '#CCC';
+            selectedMap = i;
+            console.log(i);
+        })
+    }
+
     document.getElementById('startNewGame').addEventListener('click',  () => { currentGameStage = 1; });
     document.getElementById('gotoNewGameScreen').addEventListener('click', () => { currentGameStage = 0; })
-
-    // FIXME:
-    let mapList = requestMapPage();
 
     mainloop();
 }
@@ -77,7 +63,7 @@ function mainloop() {
                 break;
             case 1:
                 makeScreenVisible('game');
-                game = new Game(selectedMap);
+                game = new Game(mapList[selectedMap]);
                 game.update();
                 break;
             case 2:
@@ -116,7 +102,10 @@ function getCookie(cookieName) {
 function requestMapPage() {
     fetch(`/get_maps?mapPage=${mapPage}`, {})
         .then(response => { return response.json(); })
-        .then(result => { drawMaps(result); })
+        .then(result => { 
+            mapList = result;
+            drawMaps(result); 
+        })
 }
 
 function requestGameStats() {
@@ -170,7 +159,7 @@ function drawMaps(mapList) {
         let context = canvas.getContext('2d');
         for (let y = 0; y < 10; y++) {
             for (let x = 0; x < 10; x++) {
-                context.strokeStyle = tileToColorDict[currentMap.map[y][x]];
+                context.fillStyle = tileToColorDict[currentMap.map[y][x]];
                 context.fillRect(x * 10, y * 10, x * 10 + 10, y * 10 + 10);
             }
         }

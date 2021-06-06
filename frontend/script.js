@@ -142,7 +142,6 @@ function requestGameStats() {
       .catch(error => console.log('error', error));
 }
 
-// TODO:
 function updateLeaderbords(leaderboards) {
     let table = document.getElementById("leadersTable");
     table.innerHTML = "";
@@ -156,7 +155,24 @@ function updateLeaderbords(leaderboards) {
     }
 }
 
-//TODO: отрисовка страницы с картами на стартовом экране
+// TODO: убрать в отдельный, более подходящий файл, ибо это немного view
 function drawMaps(mapList) {
-    console.log(mapList);
+    const tileToColorDict = {
+        'e' : '#444',
+        't' : '#888',
+        'r' : '#666',
+        's' : '#F00',
+        'b' : '#0F0'
+    }
+    for (mapId = 0; mapId < 9; mapId++) {
+        let currentMap = mapList[mapId];
+        let canvas = document.getElementById(`mapImage${mapId + 1}`);
+        let context = canvas.getContext('2d');
+        for (let y = 0; y < 10; y++) {
+            for (let x = 0; x < 10; x++) {
+                context.strokeStyle = tileToColorDict[currentMap.map[y][x]];
+                context.fillRect(x * 10, y * 10, x * 10 + 10, y * 10 + 10);
+            }
+        }
+    }
 }

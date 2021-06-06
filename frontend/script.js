@@ -37,6 +37,8 @@ function init() {
         })
     }
 
+    requestMapPage();
+
     document.getElementById('startNewGame').addEventListener('click',  () => { currentGameStage = 1; });
     document.getElementById('gotoNewGameScreen').addEventListener('click', () => { currentGameStage = 0; })
 
@@ -58,7 +60,6 @@ function mainloop() {
         lastKnownGameStage = currentGameStage;
         switch (currentGameStage) {
             case 0:
-                requestMapPage();
                 makeScreenVisible('pregame');
                 break;
             case 1:

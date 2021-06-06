@@ -50,7 +50,7 @@ app.post('/send_game_stats', (request, response) => {
     let score = request.body.score;
     let mapId = request.body.mapId;
     let username = request.body.username;
-    connection.query(`INSERT INTO leaderboards(score, mapId, username) VALUES (${score}, ${mapId}, ${username})`, function(err) {
+    connection.query(`INSERT INTO leaderboards(score, mapId, username) VALUES (${score}, ${mapId}, '${username}')`, function(err) {
         if (err) {
             console.log('data insertion to database failed');
             console.log(err);
@@ -59,7 +59,7 @@ app.post('/send_game_stats', (request, response) => {
 
     responseData = [];
     connection.query(`SELECT * FROM leaderboards WHERE mapId = ${mapId} ORDER BY score DESC`, function(err, result) {
-        for (let dataPacketId = 0; dataPacketId < Math.min(10, result.length); dataPacketId++)
+        for (let dataPacketId = 0; dataPacketId < 10; dataPacketId++)
             responseData.push([result[dataPacketId]["username"], result[dataPacketId]["score"]]);
         response.send(JSON.stringify(responseData));    
     });

@@ -42,12 +42,17 @@ document.addEventListener('DOMContentLoaded', init);
 
 function init() {
     let usernameCookie = getCookie('username');
-    if (usernameCookie)
+    if (usernameCookie) {
         document.getElementById('usernameField').value = usernameCookie;
-    document.getElementById('confirmUsername').addEventListener('click', saveUsernameInCookies);
+        username = usernameCookie;
+    }
+    document.getElementById('confirmUsername').addEventListener('click', saveUsername);
 
     document.getElementById('startNewGame').addEventListener('click',  () => { currentGameStage = 1; });
     document.getElementById('gotoNewGameScreen').addEventListener('click', () => { currentGameStage = 0; })
+
+    // FIXME:
+    let mapList = requestMapPage();
 
     mainloop();
 }
@@ -98,21 +103,14 @@ function makeScreenVisible(screenId) {
     document.getElementById(screenId).style.opacity = 1;
 }
 
-function saveUsernameInCookies() {
+function saveUsername() {
     username = document.getElementById('usernameField').value;
-    document.cookie = `username=${username}; SameSite=LAX`;
+    console.log(username);
+    localStorage.setItem('username', username);
 }
 
 function getCookie(cookieName) {
-    cookieName += "=";
-    let cookieArray = document.cookie.split(';');
-    cookieArray.forEach((cookie) => {
-        while (cookie.charAt(0) == ' ')
-            cookie = cookie.substring(1, cookie.length);
-        if (cookie.indexOf(cookieName) == 0)
-            return cookie.substring(cookieName.length, cookie.length);
-    })
-    return null;
+    return localStorage.getItem('username');
 }
 
 function requestMapPage() {
@@ -122,19 +120,25 @@ function requestMapPage() {
 }
 
 function requestGameStats() {
-    let requestData = {
-        username: username,
-        score: score,
-        mapId: mapId
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
+    
+    var urlencoded = new URLSearchParams();
+    urlencoded.append("username", "'Eugene Ponasenkov'");
+    urlencoded.append("score", "65536");
+    urlencoded.append("mapId", "2");
+    
+    var requestOptions = {
+      method: 'POST',
+      headers: myHeaders,
+      body: urlencoded,
+      redirect: 'follow'
     };
-    console.log(requestData);
-    //FIXME: отправляется нихуя
-    fetch('/send_game_stats', {
-        method: 'POST',
-        body: JSON.stringify(requestData),
-    })
-        .then(response => { return response.json(); })
-        .then(result => { updateLeaderbords(result); })
+    
+    fetch("fritzler.ru/send_game_stats", requestOptions)
+      .then(response => response.json())
+      .then(result => updateLeaderbords(result))
+      .catch(error => console.log('error', error));
 }
 
 // TODO:

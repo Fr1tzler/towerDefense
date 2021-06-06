@@ -66,6 +66,11 @@ body {
     margin: 5px;
     background-color: #ccc;
     border-radius: 6px;
+    transition: all ease 0.4s;
+}
+
+.levelSelectButton:active {
+    background-color: red;
 }
 
 .levelPage {

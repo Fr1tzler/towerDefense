@@ -114,6 +114,8 @@ function requestGameStats() {
     
     // Почти всё, что дальше в этой функции, сгенерировано POSTMAN-ом, ибо у него запросы отчего-то работают, а у меня, отчего-то нет. И времени тоже нет. 
     let urlencoded = new URLSearchParams();
+    if (!username)
+        username = 'Anonymous';
     urlencoded.append("username", username);
     urlencoded.append("score", score);
     urlencoded.append("mapId", mapId);

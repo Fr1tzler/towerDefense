@@ -73,8 +73,8 @@ class TowerModel {
 
 class EnemyModel {
     constructor(waypoints, colorId, level) {
-        this.maxHP = 5000 * level; //FIXME:
-        this.healthPoints = 5000 * level;
+        this.maxHP = 500 * level;
+        this.healthPoints = 500 * level;
         this.colorId = colorId;
         this.isAlive = true;
         this.waypoints = [];
@@ -187,7 +187,7 @@ export class GameModel {
                 this.score++;
             }
             else if (enemy.reachedBase) {
-                this.baseHp-=50;//FIXME:
+                this.baseHp--;
             } else {
                 updatedEnemyList.push(enemy);
             }

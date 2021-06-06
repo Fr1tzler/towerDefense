@@ -242,3 +242,19 @@ body {
     height: inherit;
     z-index: 1000;
 }
+
+.leaderboards {
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40%;
+    position: relative;
+}
+
+.leaderName {
+    text-align: left;
+}
+
+.leaderScore {
+    text-align: right;
+    color: orange;
+}

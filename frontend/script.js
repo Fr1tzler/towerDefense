@@ -123,27 +123,37 @@ function requestGameStats() {
     var myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
     
-    var urlencoded = new URLSearchParams();
-    urlencoded.append("username", "'Eugene Ponasenkov'");
-    urlencoded.append("score", "65536");
-    urlencoded.append("mapId", "2");
+    // Почти всё, что дальше в этой функции, сгенерировано POSTMAN-ом, ибо у него запросы отчего-то работают, а у меня, отчего-то нет. И времени тоже нет. 
+    let urlencoded = new URLSearchParams();
+    urlencoded.append("username", username);
+    urlencoded.append("score", score);
+    urlencoded.append("mapId", mapId);
     
-    var requestOptions = {
+    let requestOptions = {
       method: 'POST',
       headers: myHeaders,
       body: urlencoded,
       redirect: 'follow'
     };
     
-    fetch("fritzler.ru/send_game_stats", requestOptions)
+    fetch("/send_game_stats", requestOptions)
       .then(response => response.json())
       .then(result => updateLeaderbords(result))
       .catch(error => console.log('error', error));
 }
 
 // TODO:
-function updateLeaderbords(leaders) {
-    console.log(leaders);    
+function updateLeaderbords(leaderboards) {
+    let table = document.getElementById("leadersTable");
+    table.innerHTML = "";
+    let topRow = document.createElement("tr");
+    topRow.innerHTML = '<td class="leaderName">Player</td><td class="leaderScore">Score</td>';
+    table.appendChild(topRow);
+    for (let i = 0; i < leaderboards.length; i++) {
+        let row = document.createElement("tr");
+        row.innerHTML = `<td class="leaderName">${leaderboards[i][0]}</td><td class="leaderScore">${leaderboards[i][1]}</td>`;
+        table.appendChild(row);
+    }
 }
 
 //TODO: отрисовка страницы с картами на стартовом экране

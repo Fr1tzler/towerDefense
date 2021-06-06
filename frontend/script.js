@@ -25,11 +25,10 @@ const tempMap = {
     ]
 }
 
-let mapPage = 0;
+let mapPage = 1;
 let username = 'username';
 let score = 0;
-let mapId = 0;
-let pageFocused = true;
+let mapId = 1;
 
 let currentGameStage = 0;
 let lastKnownGameStage = 0;
@@ -46,9 +45,6 @@ function init() {
     if (usernameCookie)
         document.getElementById('usernameField').value = usernameCookie;
     document.getElementById('confirmUsername').addEventListener('click', saveUsernameInCookies);
-
-    document.addEventListener('focus', () => {pageFocused = true});
-    document.addEventListener('blur', () => {pageFocused = false});
 
     document.getElementById('startNewGame').addEventListener('click',  () => { currentGameStage = 1; });
     document.getElementById('gotoNewGameScreen').addEventListener('click', () => { currentGameStage = 0; })

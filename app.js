@@ -60,7 +60,11 @@ app.get('/get_maps', (request, response) => {
 */
 
 app.post('/send_game_stats', (request, response) => {
-    connection.query(`INSERT INTO leaderboards(score, mapId, username) VALUES (:score, :mapId, :username)`, {
+    let score = request.body.score;
+    let mapId = request.body.mapId;
+    let mapPage = request.body.mapPage;
+    console.log(score + ' ' + mapId + ' ' + mapPage);
+    connection.query(`INSERT INTO leaderboards(score, mapId, username) VALUES ?`, {
         score : request.body.score,
         mapId : request.body.mapId,
         username : request.body.username
@@ -71,9 +75,8 @@ app.post('/send_game_stats', (request, response) => {
     });
 
     responseData = [];
-    connection.query(`SELECT * FROM leaderboards WHERE mapId = :mapId ORDER BY score DESC`, {
-        mapId : request.body.mapId,
-    }, function(err, result) {
+    connection.query(`SELECT * FROM leaderboards WHERE mapId = ? ORDER BY score DESC`, 
+    [request.body.mapId], function(err, result) {
         console.log(result.length);
         for (let dataPacketId = 0; dataPacketId < Math.min(10, result.length); dataPacketId++) {
             responseData.push([username, score]);

@@ -3,14 +3,30 @@ const path = require('path');
 const http = require('http');
 const https = require('https');
 const fs = require('fs');
-// const MongoClient = require('mongodb').MongoClient;
+const mysql = require('mysql');
 
-const privateKey = fs.readFileSync('/etc/letsencrypt/live/fritzler.ru/privkey.pem');
-const certificate = fs.readFileSync('/etc/letsencrypt/live/fritzler.ru/fullchain.pem');
-const credentials = {key: privateKey, cert: certificate};
+//const privateKey = fs.readFileSync('/etc/letsencrypt/live/fritzler.ru/privkey.pem');
+//const certificate = fs.readFileSync('/etc/letsencrypt/live/fritzler.ru/fullchain.pem');
+//const credentials = {key: privateKey, cert: certificate};
+
+const secrets = require('./secrets.json');
+const connection = mysql.createConnection({
+    host: secrets.dbHost,
+    user: secrets.dbUsername,
+    database: secrets.dbName,
+    password: secrets.dbPassword
+})
+
+connection.connect(err => {
+    if (err) {
+        console.log(err);
+        return err
+    } else {
+        console.log('Database connected successfully');
+    }
+})
 
 const app = express();
-const dbPort = 0;
 
 app.use(express.static(path.join(__dirname, 'frontend')));
 app.use(express.urlencoded({ extended: false}));
@@ -20,29 +36,51 @@ app.get('/', (request, response) => {
     response.sendFile(`${__dirname}/frontend/index.html`);
 });
 
-// TODO: make request to database, extract maps with pageId == mapPage
 app.get('/get_maps', (request, response) => {
     let mapPage = request.query.mapPage;
-    response.send({ 'do you want data' : 'i will not give it' });
+    let responseData = [];
+    for (let mapId = 1; mapId < 10; mapId++) {
+        let mapInfo = require(`./maps/map_${mapPage}_${mapId}.json`)
+        responseData.push(mapInfo);
+    }
+    response.send(JSON.stringify(responseData));
 });
 
-// TODO: Make one more request to database
+/*
++-----------+-------------+------+-----+---------+----------------+
+| Field     | Type        | Null | Key | Default | Extra          |
++-----------+-------------+------+-----+---------+----------------+
+| id        | int         | NO   | PRI | NULL    | auto_increment |
+| gameStart | datetime    | YES  |     | NULL    |                |
+| gameEnd   | datetime    | YES  |     | NULL    |                |
+| score     | int         | NO   |     | NULL    |                |
+| mapId     | int         | NO   |     | NULL    |                |
+| username  | varchar(32) | YES  |     | NULL    |                |
++-----------+-------------+------+-----+---------+----------------+
+*/
+
 app.post('/send_game_stats', (request, response) => {
-    let username = request.body.username;
-    let score = request.body.score;
-    let mapId = request.body.mapId;
-    response.send({
-        '1' : 'Lupa',
-        '2' : 'Lupa',
-        '3' : 'Lupa',
-        '4' : 'Lupa',
-        '5' : 'Lupa',
-        '6' : 'Lupa',
-        '7' : 'Lupa',
-        '8' : 'Lupa',
-        '9' : 'Lupa',
-        '10e6' : username
+    connection.query(`INSERT INTO leaderboards(score, mapId, username) VALUES (:score, :mapId, :username)`, {
+        score : request.body.score,
+        mapId : request.body.mapId,
+        username : request.body.username
+    }, function(err) {
+        if (err) {
+            console.log(err);
+        }    
     });
+
+    responseData = [];
+    connection.query(`SELECT * FROM leaderboards WHERE mapId = :mapId ORDER BY score DESC`, {
+        mapId : request.body.mapId,
+    }, function(err, result) {
+        console.log(result.length);
+        for (let dataPacketId = 0; dataPacketId < Math.min(10, result.length); dataPacketId++) {
+            responseData.push([username, score]);
+        }
+    });
+
+    response.send(JSON.stringify(responseData));
 });
 
 const httpServer = http.createServer(app);
@@ -50,22 +88,3 @@ const httpsServer = https.createServer(credentials, app);
 
 httpServer.listen(80);
 httpsServer.listen(443);
-
-
-/*
-проверить и убрать в случае чего 
-app.listen(serverPort, () => {
-    console.log(`Server listening at http://localhost:${serverPort}`)
-});*/
-
-/*
-// TODO:
-const mongoClient = new MongoClient(`mongodb://localhost:${dbPort}/`, { useUnifiedTopology: true });
-mongoClient.connect(function(err, client){
- 
-    if(err){
-        return console.log(err);
-    }
-
-    client.close();
-});*/

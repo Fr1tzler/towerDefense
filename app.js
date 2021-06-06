@@ -49,28 +49,20 @@ app.get('/get_maps', (request, response) => {
 app.post('/send_game_stats', (request, response) => {
     let score = request.body.score;
     let mapId = request.body.mapId;
-    let mapPage = request.body.mapPage;
-    console.log(score + ' ' + mapId + ' ' + mapPage);
-    connection.query(`INSERT INTO leaderboards(score, mapId, username) VALUES (:score, :mapId, :username)`, {
-        score : request.body.score,
-        mapId : request.body.mapId,
-        username : request.body.username
-    }, function(err) {
+    let username = request.body.username;
+    connection.query(`INSERT INTO leaderboards(score, mapId, username) VALUES (${score}, ${mapId}, ${username})`, function(err) {
         if (err) {
+            console.log('data insertion to database failed');
             console.log(err);
         }    
     });
 
     responseData = [];
-    connection.query(`SELECT * FROM leaderboards WHERE mapId = ? ORDER BY score DESC`, 
-    [request.body.mapId], function(err, result) {
-        console.log(result.length);
-        for (let dataPacketId = 0; dataPacketId < Math.min(10, result.length); dataPacketId++) {
-            responseData.push([username, score]);
-        }
+    connection.query(`SELECT * FROM leaderboards WHERE mapId = ${mapId} ORDER BY score DESC`, function(err, result) {
+        for (let dataPacketId = 0; dataPacketId < Math.min(10, result.length); dataPacketId++)
+            responseData.push([result[dataPacketId]["username"], result[dataPacketId]["score"]]);
+        response.send(JSON.stringify(responseData));    
     });
-
-    response.send(JSON.stringify(responseData));
 });
 
 const httpServer = http.createServer(app);

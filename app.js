@@ -5,9 +5,9 @@ const https = require('https');
 const fs = require('fs');
 const mysql = require('mysql');
 
-//const privateKey = fs.readFileSync('/etc/letsencrypt/live/fritzler.ru/privkey.pem');
-//const certificate = fs.readFileSync('/etc/letsencrypt/live/fritzler.ru/fullchain.pem');
-//const credentials = {key: privateKey, cert: certificate};
+const privateKey = fs.readFileSync('/etc/letsencrypt/live/fritzler.ru/privkey.pem');
+const certificate = fs.readFileSync('/etc/letsencrypt/live/fritzler.ru/fullchain.pem');
+const credentials = {key: privateKey, cert: certificate};
 
 const secrets = require('./secrets.json');
 const connection = mysql.createConnection({
@@ -46,25 +46,12 @@ app.get('/get_maps', (request, response) => {
     response.send(JSON.stringify(responseData));
 });
 
-/*
-+-----------+-------------+------+-----+---------+----------------+
-| Field     | Type        | Null | Key | Default | Extra          |
-+-----------+-------------+------+-----+---------+----------------+
-| id        | int         | NO   | PRI | NULL    | auto_increment |
-| gameStart | datetime    | YES  |     | NULL    |                |
-| gameEnd   | datetime    | YES  |     | NULL    |                |
-| score     | int         | NO   |     | NULL    |                |
-| mapId     | int         | NO   |     | NULL    |                |
-| username  | varchar(32) | YES  |     | NULL    |                |
-+-----------+-------------+------+-----+---------+----------------+
-*/
-
 app.post('/send_game_stats', (request, response) => {
     let score = request.body.score;
     let mapId = request.body.mapId;
     let mapPage = request.body.mapPage;
     console.log(score + ' ' + mapId + ' ' + mapPage);
-    connection.query(`INSERT INTO leaderboards(score, mapId, username) VALUES ?`, {
+    connection.query(`INSERT INTO leaderboards(score, mapId, username) VALUES (:score, :mapId, :username)`, {
         score : request.body.score,
         mapId : request.body.mapId,
         username : request.body.username

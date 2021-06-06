@@ -57,6 +57,7 @@ function mainloop() {
         if (currentGameStage == 1) {
             game.update()
             if (game.gameEnded) {
+                score = game.score;
                 game = undefined;
                 requestGameStats();
                 currentGameStage = 2;
@@ -126,6 +127,8 @@ function requestGameStats() {
         score: score,
         mapId: mapId
     };
+    console.log(requestData);
+    //FIXME: отправляется нихуя
     fetch('/send_game_stats', {
         method: 'POST',
         body: JSON.stringify(requestData),

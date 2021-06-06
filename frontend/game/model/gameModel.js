@@ -73,8 +73,8 @@ class TowerModel {
 
 class EnemyModel {
     constructor(waypoints, colorId, level) {
-        this.maxHP = 500 * level;
-        this.healthPoints = 500 * level;
+        this.maxHP = 5000 * level; //FIXME:
+        this.healthPoints = 5000 * level;
         this.colorId = colorId;
         this.isAlive = true;
         this.waypoints = [];
@@ -145,7 +145,6 @@ export class GameModel {
         this.activeEnemyList = [];
         this.towerMap = new Map();
         this.lastMobSpawn = 0;
-        this.recentlyDeletedEnemy = [];
         for (let y = 0; y < mapData.map.length; y++)
             for (let x = 0; x < mapData.map[y].length; x++)
                 if (mapData.map[y][x] == Configs.towerTile)
@@ -156,6 +155,7 @@ export class GameModel {
         this.towerOnMerge = undefined;
         this.earnedMoney = 0;
         this.mergeCost = 0;
+        this.score = 0;
     }
 
     calculateBaseLocation() {
@@ -183,12 +183,11 @@ export class GameModel {
         let updatedEnemyList = [];
         this.activeEnemyList.forEach((enemy) => {
             if (!enemy.isAlive) {
-                this.recentlyDeletedEnemy.push(enemy);
                 this.earnedMoney += 3 * enemy.level;
+                this.score++;
             }
             else if (enemy.reachedBase) {
-                this.recentlyDeletedEnemy.push(enemy);
-                this.baseHp--;
+                this.baseHp-=50;//FIXME:
             } else {
                 updatedEnemyList.push(enemy);
             }

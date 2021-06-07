@@ -2,7 +2,7 @@
 
 ## Ссылка
 
-[Перейти на сайт](https://fritzler.ru)
+# [https://fritzler.ru](https://fritzler.ru)
 
 ## Участники
 

@@ -1,244 +1,388 @@
 @font-face {
-    font-family: 'Gardens CM';
-    src: url('./fonts/CM_GARDEN_R.eot');
-    src: url('./fonts/CM_GARDEN_R.eot?#iefix') format('embedded-opentype'),
-        url('./fonts/CM_GARDEN_R.woff2') format('woff2'),
-        url('./fonts/CM_GARDEN_R.woff') format('woff'),
-        url('./fonts/CM_GARDEN_R.svg#CM_GARDEN_R') format('svg');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
+  font-family: "Gardens CM";
+  src: url("./fonts/CM_GARDEN_R.eot");
+  src: url("./fonts/CM_GARDEN_R.eot?#iefix") format("embedded-opentype"),
+    url("./fonts/CM_GARDEN_R.woff2") format("woff2"),
+    url("./fonts/CM_GARDEN_R.woff") format("woff"),
+    url("./fonts/CM_GARDEN_R.svg#CM_GARDEN_R") format("svg");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
 body {
-    margin: 0;
-    background-color: #222;
-    font-family: 'Gardens CM';
-    color: white;
-    user-select: none;
+  margin: 0;
+  background-color: #222;
+  font-family: "Gardens CM";
+  color: white;
+  user-select: none;
 }
 
 .screenContainer {
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    display: flex;
-    position: absolute;
-    transition: all ease 1000ms;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  display: flex;
+  position: absolute;
+  transition: all ease 1000ms;
 }
 
 .screen {
-    /* TODO: сделать так, чтобы на экране любого размера оэтот блок был квадратом со стороной
+  /* TODO: сделать так, чтобы на экране любого размера оэтот блок был квадратом со стороной
         в 3/5 доступного простравнства, если ориентация дисплея альбомная, и 4/5, если книжная */
-    width: 600px;
-    height: 600px;
-    position: relative;
-    border-radius: 15px;
-    background-color: #333;
-    flex-direction: column;
-    display: flex;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 20px;
-    box-shadow: 0 0 20px 10px black;
+  width: 600px;
+  height: 600px;
+  position: relative;
+  border-radius: 15px;
+  background-color: #333;
+  flex-direction: column;
+  display: flex;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 20px;
+  box-shadow: 0 0 20px 10px black;
+}
+
+.screenContainer {
+  display: none;
+}
+
+.preGame {
+  display: block;
 }
 
 .gameScreenBar {
-    position: relative;
-    height: 100px;
-    display: flex;
-    flex-grow: 1;
+  position: relative;
+  height: 100px;
+  display: flex;
+  flex-grow: 1;
 }
 
 .gameScreenMiddleBar {
-    position: relative;
-    height: 700px;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: row;
+  position: relative;
+  height: 700px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: row;
 }
 
 .levelSelectButton {
-    width: 100px;
-    flex-grow: 1;
-    margin: 5px;
-    background-color: #ccc;
-    border-radius: 6px;
+  width: 100px;
+  flex-grow: 1;
+  margin: 5px;
+  background-color: #ccc;
+  border-radius: 6px;
 }
 
 .levelPage {
-    width: 700px;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
+  width: 700px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .levelPreviewRow {
-    height: 100px;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: row;
+  height: 100px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: row;
 }
 
 .levelPreview {
-    width: 100px;
-    flex-grow: 1;
-    margin: 5px;
-    background-color: #999;
-    border-radius: 6px;
-    transition: 100ms all ease;
+  width: 100px;
+  flex-grow: 1;
+  margin: 5px;
+  background-color: #999;
+  border-radius: 6px;
+  transition: 100ms all ease;
 }
 
 .levelPreview:hover {
-    box-shadow: 0 0 5px white;
+  box-shadow: 0 0 5px white;
 }
 
 .gameScreenBottomButton {
-    flex-grow: 1;
-    background-color: gray;
-    margin: 5px;
-    border-radius: 6px;
-    font-size: xx-large;
-    color: black;
+  flex-grow: 1;
+  background-color: gray;
+  margin: 5px;
+  border-radius: 6px;
+  font-size: xx-large;
+  color: black;
 }
 
 .usernameField {
-    flex-grow: 1;
-    margin: 5px;
-    border-radius: 6px;
-    width: 600px;
-    padding-left: 20px;
-    font-size: x-large;
+  flex-grow: 1;
+  margin: 5px;
+  border-radius: 6px;
+  width: 600px;
+  padding-left: 20px;
+  font-size: x-large;
 }
 
 .usernameConfirmButton {
-    flex-grow: 1;
-    margin: 5px;
-    border-radius: 6px;
-    width: 200px;
+  flex-grow: 1;
+  margin: 5px;
+  border-radius: 6px;
+  width: 200px;
 }
 
 .backgroundImage {
-    position: absolute;
-    width: 100vw;
-    height: 100vh;
-    filter: blur(4px);
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  filter: blur(4px);
 }
 
 .backgroundShadow {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
 }
 
 .visualCrossLine {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
 }
 
 .visualCross {
-    height: 20px;
-    width: 20px;
-    background-color: #666;
-    clip-path: polygon(45% 0%, 55% 0%, 55% 45%, 100% 45%, 100% 55%, 55% 55%, 55% 100%, 45% 100%, 45% 55%, 0% 55%, 0% 45%, 45% 45%);
-    transform: rotate(45deg);
+  height: 20px;
+  width: 20px;
+  background-color: #666;
+  clip-path: polygon(
+    45% 0%,
+    55% 0%,
+    55% 45%,
+    100% 45%,
+    100% 55%,
+    55% 55%,
+    55% 100%,
+    45% 100%,
+    45% 55%,
+    0% 55%,
+    0% 45%,
+    45% 45%
+  );
+  transform: rotate(45deg);
 }
 
 .screenTitle {
-    position: relative;
-    font-size: xx-large;
-    color: white;
-    margin: auto;
+  position: relative;
+  font-size: xx-large;
+  color: white;
+  margin: auto;
 }
 
 .leadersTable {
-    width: 80%;
-    position: relative;
-    color: white;
-    font-size: x-large;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    table-layout: fixed;
+  width: 80%;
+  position: relative;
+  color: white;
+  font-size: x-large;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  table-layout: fixed;
 }
 
 .gamePanelContainer {
-    position: absolute;
-    display: inline-flex;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+  position: absolute;
+  display: inline-flex;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .tilePanel {
-    /* TODO: сделать по аналогии с .screen, но относительный размер примерно 9/10 */
-    flex-grow: 1;
-    width: 800px;
-    height: 800px;
-    position: relative;
-    border-radius: 15px;
-    background-color: #333;
-    flex-direction: column;
-    display: flex;
-    padding: 10px;
-    box-shadow: 0 0 20px 10px black;
-    margin: 20px;
+  /* TODO: сделать по аналогии с .screen, но относительный размер примерно 9/10 */
+  flex-grow: 1;
+  width: 50vw;
+  height: 90vh;
+  position: relative;
+  border-radius: 15px;
+  background-color: #333;
+  flex-direction: column;
+  display: flex;
+  padding: 10px;
+  box-shadow: 0 0 20px 10px black;
+  margin: 20px;
 }
 
 .tileRow {
-    height: 80px;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: row;
+  height: 80px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: row;
+}
+
+.tileRow:first-of-type .tile:first-child {
+  border-radius: 15px 0 0 0;
+}
+
+.tileRow:first-of-type .tile:last-child {
+  border-radius: 0 15px 0 0;
+}
+
+.tileRow:last-child .tile:first-child {
+  border-radius: 0 0 0 15px;
+}
+
+.tileRow:last-child .tile:last-child {
+  border-radius: 0 0 15px 0;
 }
 
 .tile {
-    flex-grow: 1;
-    margin: 3px;
-    border-radius: 3px;
-    background-color: #888;
-    transition: all ease 100ms;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+  flex-grow: 1;
+  /* margin: 3px; */
+  /* border-radius: 3px; */
+  background: url("../images/sprites/empty-road.png");
+  background-color: #6d5d6a;
+  transition: all ease 100ms;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .emptyTile {
-    background-color: #444;
+  background: url("../images/sprites/empty-road.png");
+  background-color: #6d5d6a;
 }
 
 .towerTile {
-    background-color: #888;
-    transition: all ease 0.2s;
+  background: url("../images/sprites/empty-road.png");
+
+  background-color: #6d5d6a;
+  transition: all ease 0.2s;
 }
 
 .towerTile:hover {
-    box-shadow: 0 0 5px white;
+  /* box-shadow: 0 0 5px white; */
+  background-color: #4d4455;
+  cursor: pointer;
 }
 
-.roadTile {
-    background-color: #666;
+.roadVertical {
+  background: url("../images/sprites/vertical-road.png");
+}
+
+.roadHorizontal {
+  background: url("../images/sprites/horizontal-road.png");
+}
+
+.roadLeftTop {
+  background: url("../images/sprites/left-top.png");
+}
+
+.roadLeftDown {
+  background: url("../images/sprites/left-down.png");
+}
+
+.roadRightTop {
+  background: url("../images/sprites/right-top.png");
+}
+
+.roadRightDown {
+  background: url("../images/sprites/right-down.png");
+}
+
+.pit {
+  background: url("../images/sprites/pit.png");
+}
+
+.xStone {
+  background: url("../images/sprites/x-stone.png");
+}
+
+.fStone {
+  background: url("../images/sprites/f-stone.png");
+}
+
+.uStone {
+  background: url("../images/sprites/u-stone.png");
+}
+
+.mStone {
+  background: url("../images/sprites/m-stone.png");
+}
+
+.branches {
+  background: url("../images/sprites/branches.png");
+}
+
+.tree {
+  background: url("../images/sprites/tree.png");
+}
+
+.stone {
+  background: url("../images/sprites/stone.png");
+}
+
+.bigHouse {
+  background: url("../images/sprites/big-house.png");
+}
+
+.miniHouse {
+  background: url("../images/sprites/mini-house.png");
 }
 
 .spawnTile {
-    background-color: rgb(160, 0, 0);
+  background: url("../images/sprites/spawn.png");
 }
 
 .baseTile {
-    background-color: rgb(0, 110, 0);
+  background: url("../images/sprites/base.png");
+}
+
+.roadVertical,
+.roadHorizontal,
+.roadLeftTop,
+.roadLeftDown,
+.roadRightTop,
+.roadRightDown,
+.pit,
+.xStone,
+.fStone,
+.uStone,
+.mStone,
+.branches,
+.tree,
+.stone,
+.bigHouse,
+.miniHouse,
+.spawnTile,
+.baseTile {
+  /* background: url("../images/sprites/empty-road.png"); */
+
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: #6d5d6a;
+}
+
+.pit,
+.xStone,
+.fStone,
+.uStone,
+.mStone,
+.branches,
+.tree,
+.stone,
+.bigHouse,
+.miniHouse {
+  background: url("../images/sprites/empty-road.png");
+
+  /* background-size: contain; */
 }
 
 .laserRayLayer {
-    position: absolute;
-    pointer-events: none;
-    width: inherit;
-    height: inherit;
-    z-index: 1000;
+  position: absolute;
+  pointer-events: none;
+  width: inherit;
+  height: inherit;
+  z-index: 1000;
 }

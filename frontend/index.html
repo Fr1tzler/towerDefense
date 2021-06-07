@@ -1,110 +1,149 @@
 <!DOCTYPE html>
-<html lang='en'>
-
-<head>
-    <meta charset='UTF-8' />
-    <meta http-equiv='X-UA-Compatible' content='IE=edge' />
-    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
-    <link rel='shortcut icon' href='/images/favicon.ico' type='image/x-icon' />
-    <script src='script.js' type="module"></script>
-    <link rel='stylesheet' href='styles/styles.css' />
-    <link rel='stylesheet' href='styles/infoPanelStyles.css' />
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="/images/favicon.ico" type="image/x-icon" />
+    <script src="script.js" type="module"></script>
+    <link rel="stylesheet" href="styles/styles.css" />
+    <link rel="stylesheet" href="styles/infoPanelStyles.css" />
     <title>towerDefense</title>
-</head>
+  </head>
 
-<body>
-    <img src='images/mars-surface.jpg' class='backgroundImage' alt=''>
-    <div class='backgroundShadow' id="visualCrossContainer"></div>    
-    <script src='backgroundGenerator.js'></script>
-    <div class='screenContainer' id='pregame'>
-        <div class='screen' id='preGameScreen'>
-            <div class='gameScreenBar'>
-                <input type='text' class='usernameField' value='username'  id='usernameField'>
-                <input type='button' class='usernameConfirmButton' value='Confirm' id='confirmUsername'>
-            </div>
-            <div class='gameScreenMiddleBar'>
-                <input type='button' class='levelSelectButton' value='prevPage'>
-                <div class='levelPage'>
-                    <div class='levelPreviewRow'>
-                        <div class='levelPreview' id='preview_1'>1</div>
-                        <div class='levelPreview' id='preview_2'>2</div>
-                        <div class='levelPreview' id='preview_3'>3</div>
-                    </div>
-                    <div class='levelPreviewRow'>
-                        <div class='levelPreview' id='preview_4'>4</div>
-                        <div class='levelPreview' id='preview_5'>5</div>
-                        <div class='levelPreview' id='preview_6'>6</div>
-                    </div>
-                    <div class='levelPreviewRow'>
-                        <div class='levelPreview' id='preview_7'>7</div>
-                        <div class='levelPreview' id='preview_8'>8</div>
-                        <div class='levelPreview' id='preview_9'>9</div>
-                    </div>
-                </div>
-                <input type='button' class='levelSelectButton' value='nextPage'>
-            </div>
-            <div class='gameScreenBar'>
-                <input type='button' class='gameScreenBottomButton' id='startNewGame' value='new game'>
-            </div>
+  <body>
+    <img
+      src="images/mars-surface.jpg"
+      class="backgroundImage"
+      alt="Фон для игры Tower Defence"
+    />
+    <div class="backgroundShadow" id="visualCrossContainer"></div>
+    <script src="backgroundGenerator.js"></script>
+    <div class="screenContainer preGame" id="pregame">
+      <div class="screen" id="preGameScreen">
+        <div class="gameScreenBar">
+          <input
+            type="text"
+            class="usernameField"
+            placeholder="username"
+            id="usernameField"
+            required
+          />
+          <input
+            type="button"
+            class="usernameConfirmButton"
+            value="Confirm"
+            id="confirmUsername"
+          />
         </div>
+        <div class="gameScreenMiddleBar">
+          <input type="button" class="levelSelectButton" value="prevPage" />
+          <div class="levelPage">
+            <div class="levelPreviewRow">
+              <div class="levelPreview" id="preview_1">1</div>
+              <div class="levelPreview" id="preview_2">2</div>
+              <div class="levelPreview" id="preview_3">3</div>
+            </div>
+            <div class="levelPreviewRow">
+              <div class="levelPreview" id="preview_4">4</div>
+              <div class="levelPreview" id="preview_5">5</div>
+              <div class="levelPreview" id="preview_6">6</div>
+            </div>
+            <div class="levelPreviewRow">
+              <div class="levelPreview" id="preview_7">7</div>
+              <div class="levelPreview" id="preview_8">8</div>
+              <div class="levelPreview" id="preview_9">9</div>
+            </div>
+          </div>
+          <input type="button" class="levelSelectButton" value="nextPage" />
+        </div>
+        <div class="gameScreenBar">
+          <input
+            type="button"
+            class="gameScreenBottomButton"
+            id="startNewGame"
+            value="new game"
+          />
+        </div>
+      </div>
     </div>
-    <div class='screenContainer' id='game' style="visibility: hidden">
-        <div class='gamePanelContainer'>
-            <div class='infoPanel'>
-                <div class="infoPanelShort">
-                    <div class="waveInfoContainer">
-                        <div class="waveInfoText" id='currentWaveValue'></div>
-                    </div>
-                    <div class="waveInfoContainer">
-                        <div class="waveInfoText" id='currentMoneyValue'></div>
-                    </div>
-                </div>
-                <div class="infoPanelLarge">
-                    <div class="towerInfoData">
-                        <canvas class="towerInfoImage" id="towerInfoImage1" width="200" height="200"></canvas>
-                    </div>
-                    <div class="towerInfoData">
-                        <div class="towerInfoDataInner" id="towerInfoData1"></div>
-                    </div>
-                </div>
-                <div class="infoPanelLarge">
-                    <div class="towerInfoData">
-                        <canvas class="towerInfoImage" id="towerInfoImage2" width="200" height="200"></canvas>
-                    </div>
-                    <div class="towerInfoData">
-                        <div class="towerInfoDataInner" id="towerInfoData2"></div>
-                    </div>
-                </div>
-                <div class="infoPanelLarge">
-                    <div class="towerInfoData">
-                        <canvas class="towerInfoImage" id="towerInfoImage3" width="200" height="200"></canvas>
-                    </div>
-                    <div class="towerInfoData">
-                        <div class="towerInfoDataInner" id="towerInfoData3"></div>
-                    </div>
-                </div>
+    <div class="screenContainer" id="game">
+      <div class="gamePanelContainer">
+        <div class="infoPanel">
+          <div class="infoPanelShort">
+            <div class="waveInfoContainer">
+              <div class="waveInfoText" id="currentWaveValue"></div>
+            </div>
+            <div class="waveInfoContainer">
+              <div class="waveInfoText" id="currentMoneyValue"></div>
+            </div>
+          </div>
+          <div class="infoPanelLarge">
+            <div class="towerInfoData">
+              <canvas
+                class="towerInfoImage"
+                id="towerInfoImage1"
+                width="200"
+                height="200"
+              ></canvas>
+            </div>
+            <div class="towerInfoData">
+              <div class="towerInfoDataInner" id="towerInfoData1"></div>
+            </div>
+          </div>
+          <div class="infoPanelLarge">
+            <div class="towerInfoData">
+              <canvas
+                class="towerInfoImage"
+                id="towerInfoImage2"
+                width="200"
+                height="200"
+              ></canvas>
+            </div>
+            <div class="towerInfoData">
+              <div class="towerInfoDataInner" id="towerInfoData2"></div>
+            </div>
+          </div>
+          <div class="infoPanelLarge">
+            <div class="towerInfoData">
+              <canvas
+                class="towerInfoImage"
+                id="towerInfoImage3"
+                width="200"
+                height="200"
+              ></canvas>
+            </div>
+            <div class="towerInfoData">
+              <div class="towerInfoDataInner" id="towerInfoData3"></div>
+            </div>
+          </div>
 
-                <div class="infoPanelShort">
-                    <div class="towerMergeButton" id="towerMergeButton">
-                        <h1 class="mergeButtonLabel" id="mergeButtonLabel">MERGE!</h1>
-                    </div>
-                </div>
+          <div class="infoPanelShort">
+            <div class="towerMergeButton" id="towerMergeButton">
+              <h1 class="mergeButtonLabel" id="mergeButtonLabel">MERGE!</h1>
             </div>
-            <div class='tilePanel' id='tileScreen'></div>
+          </div>
         </div>
+        <div class="tilePanel" id="tileScreen"></div>
+      </div>
     </div>
-    <div class='screenContainer' id='aftergame'style="visibility: hidden">
-        <div class='screen' id='aftergameScreen'>
-            <div class='gameScreenBar'>
-                <h1 class='screenTitle'>YOU LOST</h1>
-            </div>
-            <div class='gameScreenMiddleBar'>
-                <!-- TODO: генерить таблицу в коде -->
-            </div>
-            <div class='gameScreenBar'>
-                <input type='button' class='gameScreenBottomButton' id='gotoNewGameScreen' value='play new game?'>
-            </div>
+    <div class="screenContainer" id="aftergame">
+      <div class="screen" id="aftergameScreen">
+        <div class="gameScreenBar">
+          <h1 class="screenTitle">YOU LOST</h1>
         </div>
+        <div class="gameScreenMiddleBar">
+          <!-- TODO: генерить таблицу в коде -->
+        </div>
+        <div class="gameScreenBar">
+          <input
+            type="button"
+            class="gameScreenBottomButton"
+            id="gotoNewGameScreen"
+            value="play new game?"
+          />
+        </div>
+      </div>
     </div>
-</body>
+  </body>
 </html>

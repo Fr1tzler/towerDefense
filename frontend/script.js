@@ -174,19 +174,20 @@ function resizeEverything() {
     while (height > width) {
         alert('Ориентируйте экран альбомно!')
     }
-    let basicSquareSize = Math.trunc(Math.min(width / 16, height / 9) * 0.9);
+
+    let basicSquareSize = Math.trunc(Math.min(width, height) * 0.9);
     
-    document.getElementById('preGameScreen').style.width = basicSquareSize + 'px';
-    document.getElementById('preGameScreen').style.height = basicSquareSize + 'px';
+    document.getElementById('preGameScreen').style.width = Math.trunc(basicSquareSize * 0.75) + 'px';
+    document.getElementById('preGameScreen').style.height = Math.trunc(basicSquareSize * 0.75) + 'px';
     
-    document.getElementById('sidePanelLeft').style.width = Math.trunc(basicSquareSize / 4) + 'px';
+    document.getElementById('sidePanelLeft').style.width = Math.trunc(basicSquareSize / 2) + 'px';
     document.getElementById('sidePanelLeft').style.height = basicSquareSize + 'px';
 
     document.getElementById('tileScreen').style.width = basicSquareSize + 'px';
     document.getElementById('tileScreen').style.height = basicSquareSize + 'px';
     
-    document.getElementById('aftergame').style.width = basicSquareSize + 'px';
-    document.getElementById('aftergame').style.height = basicSquareSize + 'px';
+    document.getElementById('aftergameScreen').style.width = Math.trunc(basicSquareSize * 0.75) + 'px';
+    document.getElementById('aftergameScreen').style.height = Math.trunc(basicSquareSize * 0.75) + 'px';
 }
 
 window.addEventListener('resize', resizeEverything);

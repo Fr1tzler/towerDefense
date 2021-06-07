@@ -171,14 +171,13 @@ function drawMaps(mapList) {
 function resizeEverything() {
     let width = window.innerWidth;
     let height = window.innerHeight;
-    while (height > width) {
+    if (height > width)
         alert('Ориентируйте экран альбомно!')
-    }
 
     let basicSquareSize = Math.trunc(Math.min(width, height) * 0.9);
     
-    document.getElementById('preGameScreen').style.width = Math.trunc(basicSquareSize * 0.75) + 'px';
-    document.getElementById('preGameScreen').style.height = Math.trunc(basicSquareSize * 0.75) + 'px';
+    document.getElementById('preGameScreen').style.width = Math.trunc(basicSquareSize * 0.9) + 'px';
+    document.getElementById('preGameScreen').style.height = Math.trunc(basicSquareSize * 0.9) + 'px';
     
     document.getElementById('sidePanelLeft').style.width = Math.trunc(basicSquareSize / 2) + 'px';
     document.getElementById('sidePanelLeft').style.height = basicSquareSize + 'px';
@@ -186,8 +185,8 @@ function resizeEverything() {
     document.getElementById('tileScreen').style.width = basicSquareSize + 'px';
     document.getElementById('tileScreen').style.height = basicSquareSize + 'px';
     
-    document.getElementById('aftergameScreen').style.width = Math.trunc(basicSquareSize * 0.75) + 'px';
-    document.getElementById('aftergameScreen').style.height = Math.trunc(basicSquareSize * 0.75) + 'px';
+    document.getElementById('aftergameScreen').style.width = Math.trunc(basicSquareSize * 0.9) + 'px';
+    document.getElementById('aftergameScreen').style.height = Math.trunc(basicSquareSize * 0.9) + 'px';
 }
 
 window.addEventListener('resize', resizeEverything);

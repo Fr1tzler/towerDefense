@@ -16,6 +16,7 @@ body {
     font-family: 'Gardens CM';
     color: white;
     user-select: none;
+    overflow: hidden;
 }
 
 .screenContainer {
@@ -105,7 +106,7 @@ body {
     background-color: gray;
     margin: 5px;
     border-radius: 6px;
-    font-size: xx-large;
+    font-size: x-large;
     color: black;
 }
 
@@ -115,7 +116,7 @@ body {
     border-radius: 6px;
     width: 600px;
     padding-left: 20px;
-    font-size: x-large;
+    font-size: larger;
 }
 
 .usernameConfirmButton {
@@ -158,7 +159,7 @@ body {
 
 .screenTitle {
     position: relative;
-    font-size: xx-large;
+    font-size: x-large;
     color: white;
     margin: auto;
 }
@@ -167,7 +168,7 @@ body {
     width: 80%;
     position: relative;
     color: white;
-    font-size: x-large;
+    font-size: larger;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);

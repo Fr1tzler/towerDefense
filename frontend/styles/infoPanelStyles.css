@@ -34,7 +34,7 @@
 
 .waveInfoText {
     position: relative;
-    font-size: x-large;
+    font-size: larger;
     color: white;
     top: 50%;
     left: 50%;
@@ -81,7 +81,7 @@
     left: 50%;
     transform: translate(-50%, -50%);
     background-color: #555;
-    font-size: x-large;
+    font-size: larger;
 }
 
 .infoPanelLarge {

@@ -3,7 +3,7 @@ import { Game } from './game/gameMain.js';
 let mapList;
 
 let mapPage = 1;
-let username = 'username';
+let username = 'Anonymous';
 let score = 0;
 let mapId = 1;
 
@@ -19,10 +19,10 @@ let selectedMap = 0;
 document.addEventListener('DOMContentLoaded', init);
 
 function init() {
-    let usernameCookie = getCookie('username');
-    if (usernameCookie) {
-        document.getElementById('usernameField').value = usernameCookie;
-        username = usernameCookie;
+    let savedUsername = getLocalStorageData('username');
+    if (savedUsername) {
+        document.getElementById('usernameField').value = savedUsername;
+        username = savedUsername;
     }
     document.getElementById('confirmUsername').addEventListener('click', saveUsername);
 
@@ -42,6 +42,7 @@ function init() {
     document.getElementById('startNewGame').addEventListener('click',  () => { currentGameStage = 1; });
     document.getElementById('gotoNewGameScreen').addEventListener('click', () => { currentGameStage = 0; })
 
+    resizeEverything();
     mainloop();
 }
 
@@ -92,12 +93,11 @@ function makeScreenVisible(screenId) {
 
 function saveUsername() {
     username = document.getElementById('usernameField').value;
-    console.log(username);
     localStorage.setItem('username', username);
 }
 
-function getCookie(cookieName) {
-    return localStorage.getItem('username');
+function getLocalStorageData(key) {
+    return localStorage.getItem(key);
 }
 
 function requestMapPage() {
@@ -115,8 +115,6 @@ function requestGameStats() {
     
     // Почти всё, что дальше в этой функции, сгенерировано POSTMAN-ом, ибо у него запросы отчего-то работают, а у меня, отчего-то нет. И времени тоже нет. 
     let urlencoded = new URLSearchParams();
-    if (!username)
-        username = 'Anonymous';
     urlencoded.append("username", username);
     urlencoded.append("score", score);
     urlencoded.append("mapId", mapId);
@@ -168,3 +166,27 @@ function drawMaps(mapList) {
         }
     }
 }
+
+// CSS media-запросы, это, конечно, хорошо, но разбираться, увы, уже времени нет.
+function resizeEverything() {
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    while (height > width) {
+        alert('Ориентируйте экран альбомно!')
+    }
+    let basicSquareSize = Math.trunc(Math.min(width / 16, height / 9) * 0.9);
+    
+    document.getElementById('preGameScreen').style.width = basicSquareSize + 'px';
+    document.getElementById('preGameScreen').style.height = basicSquareSize + 'px';
+    
+    document.getElementById('sidePanelLeft').style.width = Math.trunc(basicSquareSize / 4) + 'px';
+    document.getElementById('sidePanelLeft').style.height = basicSquareSize + 'px';
+
+    document.getElementById('tileScreen').style.width = basicSquareSize + 'px';
+    document.getElementById('tileScreen').style.height = basicSquareSize + 'px';
+    
+    document.getElementById('aftergame').style.width = basicSquareSize + 'px';
+    document.getElementById('aftergame').style.height = basicSquareSize + 'px';
+}
+
+window.addEventListener('resize', resizeEverything);

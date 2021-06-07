@@ -1,5 +1,9 @@
 # towerDefense
 
+## Ссылка
+
+[Перейти на сайт](https://fritzler.ru)
+
 ## Участники
 
 - Виктор Фрицлер ([@Fr1tzler](https://github.com/Fr1tzler))
